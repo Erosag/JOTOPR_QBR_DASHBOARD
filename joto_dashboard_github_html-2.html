@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JOTO QBR Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+      body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .table-scroll::-webkit-scrollbar {
+        height: 10px;
+      }
+      .table-scroll::-webkit-scrollbar-track {
+        background: #f1f3f5;
+        border-radius: 999px;
+      }
+      .table-scroll::-webkit-scrollbar-thumb {
+        background: #d0d5dd;
+        border-radius: 999px;
+      }
+      .dropzone.dragover {
+        border-color: #d8232a;
+        background: #fff5f5;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-[#F7F7F8] text-neutral-900">
+    <header class="sticky top-0 z-10 border-b border-neutral-200/80 bg-white/90 backdrop-blur">
+      <div class="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex items-center gap-4">
+          <img
+            src="data:image/jpeg;base64,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"
+            alt="JOTO logo"
+            class="h-12 w-auto object-contain md:h-14"
+          />
+          <div>
+            <input id="clientTitle" value="JOTO QBR" class="text-2xl md:text-3xl font-bold tracking-tight bg-transparent border-b-2 border-transparent focus:border-[#D8232A] outline-none" />
+            <p class="text-sm text-neutral-500 md:text-base">
+              Upload a CSV file and automatically generate mentions, audience, publicity, and a placement list.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <label for="csvFile" class="cursor-pointer rounded-2xl bg-[#D8232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#B61E24]">
+            Upload CSV
+          </label>
+          <input id="csvFile" type="file" accept=".csv,text/csv" class="hidden" />
+          <button id="loadSampleBtn" class="rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-50">
+            Load sample data
+          </button>
+          <button id="exportPdfBtn" class="rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-50">
+            Export PDF
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="dashboardContent" class="mx-auto max-w-7xl space-y-8 px-6 py-8">
+      <section class="grid gap-4 md:grid-cols-4">
+        <div class="rounded-3xl bg-[#D8232A] p-6 text-white shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-white/80">Data source</p>
+              <p id="dataSourceLabel" class="mt-1 text-lg font-semibold">CSV upload</p>
+            </div>
+            <div class="text-2xl">📄</div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-neutral-500">Rows loaded</p>
+              <p id="rowsLoaded" class="mt-1 text-lg font-semibold">0</p>
+            </div>
+            <div class="text-2xl text-[#D8232A]">📊</div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-neutral-500">Status</p>
+              <p id="statusLabel" class="mt-1 text-lg font-semibold">Waiting for CSV</p>
+            </div>
+            <div class="text-2xl text-[#D8232A]">🔎</div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <div class="space-y-3">
+            <div>
+              <p class="text-sm text-neutral-500">Filters</p>
+              <p class="mt-1 text-lg font-semibold">Tier and Date</p>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-3">
+              <select id="tierFilter" class="rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-[#D8232A]">
+                <option value="">All tiers</option>
+              </select>
+              <input id="dateFromFilter" type="date" class="rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-[#D8232A]" />
+              <input id="dateToFilter" type="date" class="rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-800 outline-none focus:border-[#D8232A]" />
+            </div>
+            <button id="clearFiltersBtn" class="rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-semibold text-neutral-700 transition hover:bg-neutral-100">
+              Clear filters
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="dropzone" class="dropzone rounded-3xl border-2 border-dashed border-neutral-300 bg-white p-8 text-center shadow-sm transition">
+        <div class="mx-auto max-w-2xl space-y-3">
+          <p class="text-lg font-semibold text-neutral-900">Drop your CSV file here or use the Upload CSV button</p>
+          <p class="text-sm text-neutral-500">
+            Required columns: Date, Station/Publication, Tier, Audience/UVPM, DMA and Targets, Title, Link, Type of media, Publicity value.
+          </p>
+          <p id="messageBox" class="text-sm text-neutral-600">
+            The dashboard will group data by media type and build the three charts automatically.
+          </p>
+        </div>
+      </section>
+
+      <div class="my-6 h-px w-full bg-[#EA3323]"></div>
+
+      <section class="grid gap-5 xl:grid-cols-3">
+        <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <h3 class="text-lg font-semibold text-neutral-900 md:text-xl">Mentions by Media Type</h3>
+            <span class="rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">Live preview</span>
+          </div>
+          <div class="space-y-5">
+            <div class="relative mx-auto h-[280px] max-w-[280px]">
+              <canvas id="mentionsChart"></canvas>
+              <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+                <div id="mentionsTotal" class="text-3xl font-bold tracking-tight text-neutral-950">0</div>
+                <div class="mt-1 text-sm text-neutral-500">Mentions</div>
+              </div>
+            </div>
+            <div id="mentionsLegend" class="grid grid-cols-2 gap-2 text-xs text-neutral-600"></div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <h3 class="text-lg font-semibold text-neutral-900 md:text-xl">Audience by Media Type</h3>
+            <span class="rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">Live preview</span>
+          </div>
+          <div class="space-y-5">
+            <div class="relative mx-auto h-[280px] max-w-[280px]">
+              <canvas id="audienceChart"></canvas>
+              <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-3 text-center">
+                <div id="audienceTotal" class="text-2xl font-bold tracking-tight text-neutral-950 md:text-3xl">0</div>
+                <div class="mt-1 text-sm text-neutral-500">Audience</div>
+              </div>
+            </div>
+            <div id="audienceLegend" class="grid grid-cols-2 gap-2 text-xs text-neutral-600"></div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <h3 class="text-lg font-semibold text-neutral-900 md:text-xl">Publicity by Media Type</h3>
+            <span class="rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">Live preview</span>
+          </div>
+          <div class="space-y-5">
+            <div class="relative mx-auto h-[280px] max-w-[280px]">
+              <canvas id="publicityChart"></canvas>
+              <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-3 text-center">
+                <div id="publicityTotal" class="text-2xl font-bold tracking-tight text-neutral-950 md:text-3xl">$0</div>
+                <div class="mt-1 text-sm text-neutral-500">Publicity</div>
+              </div>
+            </div>
+            <div id="publicityLegend" class="grid grid-cols-2 gap-2 text-xs text-neutral-600"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="space-y-5">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h3 class="text-2xl font-semibold text-neutral-900">Placement List</h3>
+            <p class="text-neutral-500">Compact spreadsheet-style view showing all placement columns at once.</p>
+          </div>
+          <span class="w-fit rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">Spreadsheet layout</span>
+        </div>
+
+        <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
+          <div class="table-scroll overflow-x-auto">
+            <table class="w-full min-w-[1250px] text-sm">
+              <thead class="border-b border-neutral-200 bg-neutral-50">
+                <tr>
+                  <th><button data-sort="date" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Date</button></th>
+                  <th><button data-sort="publication" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Station / Publication</button></th>
+                  <th><button data-sort="tier" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Tier</button></th>
+                  <th><button data-sort="audience" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Audience / UVPM</button></th>
+                  <th><button data-sort="dma" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">DMA and Targets</button></th>
+                  <th><button data-sort="title" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Title</button></th>
+                  <th><button data-sort="link" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Link</button></th>
+                  <th><button data-sort="mediaType" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Type of media</button></th>
+                  <th><button data-sort="publicity" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Publicity value</button></th>
+                </tr>
+              </thead>
+              <tbody id="placementsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const COLORS = {
+        tv: '#2E86DE',
+        onlinePrint: '#27AE60',
+        radio: '#F5B041',
+        podcasts: '#8E44AD',
+        youtube: '#5D6D7E',
+        default: '#16A085',
+      };
+
+      const SAMPLE_ROWS = [
+        {
+          'Date': '2026-03-04',
+          'Station/Publication': 'Forbes',
+          'Tier': 'Tier I',
+          'Audience/UVPM': '12400000',
+          'DMA and Targets': 'Active individual investors and traders, finance professionals, and retirement-focused investors seeking real-time market insights, collaborative discussion, and peer support.',
+          'Title': 'How Brands Are Redefining Earned Media In 2026',
+          'Link': 'https://forbes.com/example-story',
+          'Type of media': 'Online + Print',
+          'Publicity value': '8200000'
+        },
+        {
+          'Date': '2026-03-02',
+          'Station/Publication': 'NBC Los Angeles',
+          'Tier': 'Tier II',
+          'Audience/UVPM': '4850000',
+          'DMA and Targets': 'Los Angeles / Consumers',
+          'Title': 'JOTO Client Featured In Morning Segment On Industry Trends',
+          'Link': 'https://nbclosangeles.com/example-story',
+          'Type of media': 'TV',
+          'Publicity value': '1900000'
+        },
+        {
+          'Date': '2026-02-28',
+          'Station/Publication': 'Adweek',
+          'Tier': 'Tier I',
+          'Audience/UVPM': '3200000',
+          'DMA and Targets': 'National / Marketing Decision Makers',
+          'Title': 'The PR Strategies Getting The Most Attention Right Now',
+          'Link': 'https://adweek.com/example-story',
+          'Type of media': 'Online + Print',
+          'Publicity value': '6100000'
+        },
+        {
+          'Date': '2026-02-24',
+          'Station/Publication': 'Business Insider',
+          'Tier': 'Tier I',
+          'Audience/UVPM': '8900000',
+          'DMA and Targets': 'National / Startup Audience',
+          'Title': 'Why Founder Storytelling Is Driving Better Media Results',
+          'Link': 'https://businessinsider.com/example-story',
+          'Type of media': 'Online + Print',
+          'Publicity value': '5400000'
+        },
+        {
+          'Date': '2026-02-19',
+          'Station/Publication': 'Austin Business Journal',
+          'Tier': 'Tier III',
+          'Audience/UVPM': '780000',
+          'DMA and Targets': 'Austin / Local Business Community',
+          'Title': 'Texas Brands Gain Momentum With Smarter Media Positioning',
+          'Link': 'https://bizjournals.com/example-story',
+          'Type of media': 'Radio',
+          'Publicity value': '870000'
+        },
+        {
+          'Date': '2026-02-15',
+          'Station/Publication': 'Fast Company Podcast',
+          'Tier': 'Tier I',
+          'Audience/UVPM': '5600000',
+          'DMA and Targets': 'National / Innovation Audience',
+          'Title': 'What Modern PR Teams Need From Their Reporting Dashboards',
+          'Link': 'https://fastcompany.com/example-story',
+          'Type of media': 'Podcasts',
+          'Publicity value': '1210000'
+        },
+        {
+          'Date': '2026-02-10',
+          'Station/Publication': 'YouTube Finance Channel',
+          'Tier': 'Tier II',
+          'Audience/UVPM': '4800000',
+          'DMA and Targets': 'Global / Retail investors',
+          'Title': 'Daily Market Breakdown With JOTO Client',
+          'Link': 'https://youtube.com/example-story',
+          'Type of media': 'YouTube',
+          'Publicity value': '160000'
+        }
+      ];
+
+      let mentionsChart;
+      let audienceChart;
+      let publicityChart;
+      let currentRows = [];
+      let currentSourceLabel = 'CSV upload';
+      let currentSort = { key: '', direction: 'asc' };
+
+      const mediaOrder = ['Online + Print', 'TV', 'Radio', 'Podcasts', 'YouTube'];
+
+      function normalizeKey(value) {
+        return String(value || '')
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, ' ')
+          .replace(/[\r\n]+/g, ' ')
+          .replace(/[“”]/g, '"');
+      }
+
+      function parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < line.length; i += 1) {
+          const char = line[i];
+          const next = line[i + 1];
+
+          if (char === '"') {
+            if (inQuotes && next === '"') {
+              current += '"';
+              i += 1;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(current);
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+
+        result.push(current);
+        return result.map((item) => item.trim());
+      }
+
+      function csvToObjects(text) {
+        const lines = text
+          .replace(/^\uFEFF/, '')
+          .split(/\r?\n/)
+          .filter((line) => line.trim().length > 0);
+
+        if (lines.length < 2) {
+          throw new Error('The CSV needs at least a header row and one data row.');
+        }
+
+        const headers = parseCSVLine(lines[0]);
+        const rows = lines.slice(1).map((line) => parseCSVLine(line));
+
+        return rows.map((values) => {
+          const row = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index] ?? '';
+          });
+          return row;
+        });
+      }
+
+      function getColumnValue(row, aliases) {
+        const entries = Object.entries(row);
+        for (const [key, value] of entries) {
+          const normalized = normalizeKey(key);
+          if (aliases.includes(normalized)) {
+            return value;
+          }
+        }
+        return '';
+      }
+
+      function toNumber(value) {
+        if (value === null || value === undefined) return 0;
+        const cleaned = String(value).replace(/[^0-9.-]/g, '');
+        const parsed = Number(cleaned);
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+
+      function formatNumber(value) {
+        return new Intl.NumberFormat('en-US').format(value);
+      }
+
+      function formatCurrency(value) {
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          maximumFractionDigits: 0,
+        }).format(value);
+      }
+
+      function getMediaColor(mediaType) {
+        const normalized = normalizeKey(mediaType);
+        if (normalized.includes('tv')) return COLORS.tv;
+        if (normalized.includes('online') || normalized.includes('print')) return COLORS.onlinePrint;
+        if (normalized.includes('radio')) return COLORS.radio;
+        if (normalized.includes('podcast')) return COLORS.podcasts;
+        if (normalized.includes('youtube')) return COLORS.youtube;
+        return COLORS.default;
+      }
+
+      function aggregateByMedia(rows) {
+        const grouped = {};
+
+        rows.forEach((rawRow) => {
+          const mediaType = getColumnValue(rawRow, [
+            'type of media',
+            'type pf media',
+            'media type',
+          ]) || 'Other';
+
+          if (!grouped[mediaType]) {
+            grouped[mediaType] = {
+              mediaType,
+              mentions: 0,
+              audience: 0,
+              publicity: 0,
+            };
+          }
+
+          grouped[mediaType].mentions += 1;
+          grouped[mediaType].audience += toNumber(getColumnValue(rawRow, [
+            'audience/uvpm',
+            'audience / uvpm',
+            'audience',
+            'uvpm',
+          ]));
+          grouped[mediaType].publicity += toNumber(getColumnValue(rawRow, [
+            'publicity value',
+            'pubicity value',
+            'publicity',
+          ]));
+        });
+
+        return Object.values(grouped).sort((a, b) => {
+          const aIndex = mediaOrder.indexOf(a.mediaType);
+          const bIndex = mediaOrder.indexOf(b.mediaType);
+          if (aIndex === -1 && bIndex === -1) return a.mediaType.localeCompare(b.mediaType);
+          if (aIndex === -1) return 1;
+          if (bIndex === -1) return -1;
+          return aIndex - bIndex;
+        });
+      }
+
+      function buildLegend(containerId, items, formatter) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = items
+          .map((item) => `
+            <div class="flex items-center justify-between gap-2 rounded-xl bg-neutral-50 px-2 py-1.5">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="h-2.5 w-2.5 rounded-full shrink-0" style="background:${getMediaColor(item.mediaType)}"></span>
+                <span class="truncate">${item.mediaType}</span>
+              </div>
+              <span class="font-medium text-neutral-800">${formatter(item)}</span>
+            </div>
+          `)
+          .join('');
+      }
+
+      function createOrUpdateChart(existingChart, canvasId, labels, data, colors) {
+        if (existingChart) {
+          existingChart.destroy();
+        }
+
+        const ctx = document.getElementById(canvasId);
+        return new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels,
+            datasets: [{
+              data,
+              backgroundColor: colors,
+              borderColor: '#ffffff',
+              borderWidth: 2,
+              hoverOffset: 6,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label(context) {
+                    return `${context.label}: ${context.formattedValue}`;
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function getNormalizedRow(row) {
+        return {
+          original: row,
+          date: getColumnValue(row, ['date']),
+          publication: getColumnValue(row, ['station/publication', 'station / publication', 'publication', 'station']),
+          tier: getColumnValue(row, ['tier']),
+          audience: getColumnValue(row, ['audience/uvpm', 'audience / uvpm', 'audience', 'uvpm']),
+          dma: getColumnValue(row, ['dma and targets', 'dma & targets', 'dma', 'targets']),
+          title: getColumnValue(row, ['title']),
+          link: getColumnValue(row, ['link']),
+          mediaType: getColumnValue(row, ['type of media', 'type pf media', 'media type']),
+          publicity: getColumnValue(row, ['publicity value', 'pubicity value', 'publicity']),
+        };
+      }
+
+      function sortRows(rows) {
+        if (!currentSort.key) return [...rows];
+        const direction = currentSort.direction === 'asc' ? 1 : -1;
+        return [...rows].sort((a, b) => {
+          const rowA = getNormalizedRow(a);
+          const rowB = getNormalizedRow(b);
+          let valA = rowA[currentSort.key] || '';
+          let valB = rowB[currentSort.key] || '';
+
+          if (currentSort.key === 'audience' || currentSort.key === 'publicity') {
+            valA = toNumber(valA);
+            valB = toNumber(valB);
+            return (valA - valB) * direction;
+          }
+
+          if (currentSort.key === 'date') {
+            valA = new Date(valA || 0).getTime();
+            valB = new Date(valB || 0).getTime();
+            return (valA - valB) * direction;
+          }
+
+          return String(valA).localeCompare(String(valB), undefined, { sensitivity: 'base' }) * direction;
+        });
+      }
+
+      function renderTable(rows) {
+        const tbody = document.getElementById('placementsTableBody');
+        const sortedRows = sortRows(rows);
+        tbody.innerHTML = sortedRows.map((row, index) => {
+          const item = getNormalizedRow(row);
+          const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-[#FCFCFD]';
+
+          return `
+            <tr class="${rowClass}">
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${item.date || ''}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 font-medium text-neutral-900">${item.publication || ''}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">
+                <span class="inline-flex rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">${item.tier || ''}</span>
+              </td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${item.audience || ''}</td>
+              <td class="min-w-[420px] border-b border-neutral-100 px-4 py-3 leading-6 text-neutral-700">${item.dma || ''}</td>
+              <td class="min-w-[320px] border-b border-neutral-100 px-4 py-3 text-neutral-900">${item.title || ''}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-[#D8232A]">${item.link ? `<a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.link}</a>` : ''}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${item.mediaType || ''}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${item.publicity || ''}</td>
+            </tr>
+          `;
+        }).join('');
+        updateSortButtons();
+      }
+
+      function populateTierFilter(rows) {
+        const select = document.getElementById('tierFilter');
+        const currentValue = select.value;
+        const tiers = [...new Set(rows.map((row) => getColumnValue(row, ['tier'])).filter(Boolean))].sort();
+        select.innerHTML = '<option value="">All tiers</option>' + tiers.map((tier) => `<option value="${tier}">${tier}</option>`).join('');
+        select.value = tiers.includes(currentValue) ? currentValue : '';
+      }
+
+      function applyFilters(rows) {
+        const tierValue = document.getElementById('tierFilter').value;
+        const dateFrom = document.getElementById('dateFromFilter').value;
+        const dateTo = document.getElementById('dateToFilter').value;
+
+        return rows.filter((row) => {
+          const tier = getColumnValue(row, ['tier']);
+          const date = getColumnValue(row, ['date']);
+          const rowDate = date ? new Date(date) : null;
+          const fromOk = !dateFrom || (rowDate && !Number.isNaN(rowDate.getTime()) && rowDate >= new Date(dateFrom + 'T00:00:00'));
+          const toOk = !dateTo || (rowDate && !Number.isNaN(rowDate.getTime()) && rowDate <= new Date(dateTo + 'T23:59:59'));
+          const tierOk = !tierValue || tier === tierValue;
+          return tierOk && fromOk && toOk;
+        });
+      }
+
+      function updateSortButtons() {
+        document.querySelectorAll('.sort-btn').forEach((btn) => {
+          const key = btn.dataset.sort;
+          const baseLabels = {
+            date: 'Date', publication: 'Station / Publication', tier: 'Tier', audience: 'Audience / UVPM', dma: 'DMA and Targets', title: 'Title', link: 'Link', mediaType: 'Type of media', publicity: 'Publicity value'
+          };
+          let label = baseLabels[key] || btn.textContent;
+          if (currentSort.key === key) {
+            label += currentSort.direction === 'asc' ? ' ↑' : ' ↓';
+          }
+          btn.textContent = label;
+        });
+      }
+
+      function refreshDashboardView() {
+        const filteredRows = applyFilters(currentRows);
+        updateDashboard(filteredRows, currentSourceLabel);
+      }
+
+      function updateDashboard(rows, sourceLabel) {
+        const grouped = aggregateByMedia(rows);
+        const labels = grouped.map((item) => item.mediaType);
+        const mentions = grouped.map((item) => item.mentions);
+        const audience = grouped.map((item) => item.audience);
+        const publicity = grouped.map((item) => item.publicity);
+        const colors = grouped.map((item) => getMediaColor(item.mediaType));
+
+        const totalMentions = mentions.reduce((sum, value) => sum + value, 0);
+        const totalAudience = audience.reduce((sum, value) => sum + value, 0);
+        const totalPublicity = publicity.reduce((sum, value) => sum + value, 0);
+
+        document.getElementById('mentionsTotal').textContent = formatNumber(totalMentions);
+        document.getElementById('audienceTotal').textContent = formatNumber(totalAudience);
+        document.getElementById('publicityTotal').textContent = formatCurrency(totalPublicity);
+        document.getElementById('rowsLoaded').textContent = formatNumber(rows.length);
+        document.getElementById('statusLabel').textContent = 'Dashboard ready';
+        document.getElementById('dataSourceLabel').textContent = sourceLabel;
+
+        buildLegend('mentionsLegend', grouped, (item) => formatNumber(item.mentions));
+        buildLegend('audienceLegend', grouped, (item) => formatNumber(item.audience));
+        buildLegend('publicityLegend', grouped, (item) => formatCurrency(item.publicity));
+
+        mentionsChart = createOrUpdateChart(mentionsChart, 'mentionsChart', labels, mentions, colors);
+        audienceChart = createOrUpdateChart(audienceChart, 'audienceChart', labels, audience, colors);
+        publicityChart = createOrUpdateChart(publicityChart, 'publicityChart', labels, publicity, colors);
+
+        renderTable(rows);
+      }
+
+      function setMessage(text, isError = false) {
+        const box = document.getElementById('messageBox');
+        box.textContent = text;
+        box.className = isError ? 'text-sm text-red-600' : 'text-sm text-neutral-600';
+      }
+
+      function validateRows(rows) {
+        if (!rows.length) {
+          throw new Error('The CSV file has no data rows.');
+        }
+
+        const firstRow = rows[0];
+        const requiredChecks = [
+          ['date'],
+          ['station/publication', 'station / publication', 'publication', 'station'],
+          ['audience/uvpm', 'audience / uvpm', 'audience', 'uvpm'],
+          ['dma and targets', 'dma & targets', 'dma', 'targets'],
+          ['title'],
+          ['link'],
+          ['type of media', 'type pf media', 'media type'],
+          ['publicity value', 'pubicity value', 'publicity'],
+        ];
+
+        const missing = requiredChecks.filter((aliases) => !getColumnValue(firstRow, aliases));
+        if (missing.length > 0) {
+          throw new Error('Some required columns are missing or empty in the first row. Check your CSV headers.');
+        }
+      }
+
+      function processCSVText(text, sourceLabel) {
+        try {
+          const rows = csvToObjects(text);
+          validateRows(rows);
+          currentRows = rows;
+          currentSourceLabel = sourceLabel;
+          populateTierFilter(rows);
+          refreshDashboardView();
+          setMessage('CSV loaded successfully. Charts and placement list were updated.');
+        } catch (error) {
+          document.getElementById('statusLabel').textContent = 'CSV error';
+          setMessage(error.message || 'Could not read the CSV file.', true);
+        }
+      }
+
+      function loadSampleData() {
+        currentRows = SAMPLE_ROWS;
+        currentSourceLabel = 'Sample data';
+        populateTierFilter(SAMPLE_ROWS);
+        refreshDashboardView();
+        setMessage('Sample data loaded. Upload your own CSV when you are ready.');
+      }
+
+      document.getElementById('csvFile').addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+          processCSVText(loadEvent.target.result, file.name);
+        };
+        reader.onerror = () => {
+          document.getElementById('statusLabel').textContent = 'CSV error';
+          setMessage('The file could not be read.', true);
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('loadSampleBtn').addEventListener('click', loadSampleData);
+
+      document.getElementById('tierFilter').addEventListener('change', refreshDashboardView);
+      document.getElementById('dateFromFilter').addEventListener('change', refreshDashboardView);
+      document.getElementById('dateToFilter').addEventListener('change', refreshDashboardView);
+      document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+        document.getElementById('tierFilter').value = '';
+        document.getElementById('dateFromFilter').value = '';
+        document.getElementById('dateToFilter').value = '';
+        refreshDashboardView();
+      });
+
+      document.querySelectorAll('.sort-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.sort;
+          if (currentSort.key === key) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+          } else {
+            currentSort.key = key;
+            currentSort.direction = 'asc';
+          }
+          renderTable(applyFilters(currentRows));
+        });
+      });
+
+      document.getElementById('exportPdfBtn').addEventListener('click', async () => {
+        try {
+          const button = document.getElementById('exportPdfBtn');
+          const originalText = button.textContent;
+          button.textContent = 'Exporting...';
+          button.disabled = true;
+
+          const dashboard = document.getElementById('dashboardContent');
+          const canvas = await html2canvas(dashboard, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#F7F7F8',
+            windowWidth: document.documentElement.scrollWidth,
+          });
+
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const margin = 10;
+          const usableWidth = pageWidth - margin * 2;
+          const usableHeight = pageHeight - margin * 2;
+
+          const imgData = canvas.toDataURL('image/png');
+          const imgWidth = usableWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          let heightLeft = imgHeight;
+          let position = margin;
+
+          pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+          heightLeft -= usableHeight;
+
+          while (heightLeft > 0) {
+            position = heightLeft - imgHeight + margin;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+            heightLeft -= usableHeight;
+          }
+
+          pdf.save('joto-qbr-dashboard.pdf');
+          setMessage('PDF exported successfully.');
+          button.textContent = originalText;
+          button.disabled = false;
+        } catch (error) {
+          document.getElementById('statusLabel').textContent = 'PDF error';
+          setMessage('Could not export PDF.', true);
+          document.getElementById('exportPdfBtn').textContent = 'Export PDF';
+          document.getElementById('exportPdfBtn').disabled = false;
+        }
+      });
+
+      const dropzone = document.getElementById('dropzone');
+      ['dragenter', 'dragover'].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          dropzone.classList.add('dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          dropzone.classList.remove('dragover');
+        });
+      });
+
+      dropzone.addEventListener('drop', (event) => {
+        const file = event.dataTransfer.files && event.dataTransfer.files[0];
+        if (!file) return;
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+          document.getElementById('statusLabel').textContent = 'CSV error';
+          setMessage('Please drop a .csv file.', true);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+          processCSVText(loadEvent.target.result, file.name);
+        };
+        reader.readAsText(file);
+      });
+
+      loadSampleData();
+    </script>
+  </body>
+</html>
