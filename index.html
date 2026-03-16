@@ -348,27 +348,30 @@
         return result.map((item) => item.trim());
       }
 
-      function csvToObjects(text) {
-        const lines = text
-          .replace(/^\uFEFF/, '')
-          .split(/\r?\n/)
-          .filter((line) => line.trim().length > 0);
+     function csvToObjects(text) {
+  const lines = text
+    .replace(/^\uFEFF/, '')
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0);
 
-        if (lines.length < 2) {
-          throw new Error('The CSV needs at least a header row and one data row.');
-        }
+  if (lines.length < 2) {
+    throw new Error('The CSV needs at least a header row and one data row.');
+  }
 
-        const headers = parseCSVLine(lines[0]);
-        const rows = lines.slice(1).map((line) => parseCSVLine(line));
+  const headers = parseCSVLine(lines[0]);
+  const rows = lines.slice(1).map((line) => parseCSVLine(line));
 
-        return rows.map((values) => {
-          const row = {};
-          headers.forEach((header, index) => {
-            row[header] = values[index] ?? '';
-          });
-          return row;
-        });
-      }
+  return {
+    headers,
+    rows: rows.map((values) => {
+      const row = {};
+      headers.forEach((header, index) => {
+        row[header] = values[index] ?? '';
+      });
+      return row;
+    }),
+  };
+}
 
       function getColumnValue(row, aliases) {
         const entries = Object.entries(row);
@@ -648,38 +651,42 @@
         box.textContent = text;
         box.className = isError ? 'text-sm text-red-600' : 'text-sm text-neutral-600';
       }
+function validateRows(headers, rows) {
+  if (!rows.length) {
+    throw new Error('The CSV file has no data rows.');
+  }
 
-      function validateRows(rows) {
-        if (!rows.length) {
-          throw new Error('The CSV file has no data rows.');
-        }
+  const normalizedHeaders = headers.map((header) => normalizeKey(header));
 
-        const firstRow = rows[0];
-        const requiredChecks = [
-          ['date'],
-          ['station/publication', 'station / publication', 'publication', 'station'],
-          ['audience/uvpm', 'audience / uvpm', 'audience', 'uvpm'],
-          ['dma and targets', 'dma & targets', 'dma', 'targets'],
-          ['title'],
-          ['link'],
-          ['type of media', 'type pf media', 'media type'],
-          ['publicity value', 'pubicity value', 'publicity'],
-        ];
+  const requiredChecks = [
+    ['date'],
+    ['station/publication', 'station / publication', 'publication', 'station'],
+    ['tier'],
+    ['audience/uvpm', 'audience / uvpm', 'audience', 'uvpm'],
+    ['dma and targets', 'dma & targets', 'dma', 'targets'],
+    ['title'],
+    ['link'],
+    ['media type', 'type of media', 'type pf media'],
+    ['publicity value', 'pubicity value', 'publicity'],
+  ];
 
-        const missing = requiredChecks.filter((aliases) => !getColumnValue(firstRow, aliases));
-        if (missing.length > 0) {
-          throw new Error('Some required columns are missing or empty in the first row. Check your CSV headers.');
-        }
-      }
+  const missing = requiredChecks.filter((aliases) =>
+    !aliases.some((alias) => normalizedHeaders.includes(alias))
+  );
+
+  if (missing.length > 0) {
+    throw new Error('Some required CSV headers are missing. Check your column names.');
+  }
+}
 
       function processCSVText(text, sourceLabel) {
         try {
-          const rows = csvToObjects(text);
-          validateRows(rows);
-          currentRows = rows;
-          currentSourceLabel = sourceLabel;
-          populateTierFilter(rows);
-          refreshDashboardView();
+      const parsed = csvToObjects(text);
+validateRows(parsed.headers, parsed.rows);
+currentRows = parsed.rows;
+currentSourceLabel = sourceLabel;
+populateTierFilter(parsed.rows);
+refreshDashboardView();
           setMessage('CSV loaded successfully. Charts and placement list were updated.');
         } catch (error) {
           document.getElementById('statusLabel').textContent = 'CSV error';
