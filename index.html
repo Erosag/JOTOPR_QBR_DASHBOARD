@@ -195,14 +195,14 @@
               <thead class="border-b border-neutral-200 bg-neutral-50">
                 <tr>
                   <th><button data-sort="date" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Date</button></th>
-                  <th><button data-sort="publication" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Station / Publication</button></th>
+                  <th><button data-sort="publication" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Publication</button></th>
                   <th><button data-sort="tier" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Tier</button></th>
-                  <th><button data-sort="audience" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Audience / UVPM</button></th>
+                  <th><button data-sort="audience" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Audience by Media Type</button></th>
                   <th><button data-sort="dma" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">DMA and Targets</button></th>
                   <th><button data-sort="title" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Title</button></th>
                   <th><button data-sort="link" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Link</button></th>
-                  <th><button data-sort="mediaType" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Type of media</button></th>
-                  <th><button data-sort="publicity" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Publicity value</button></th>
+                  <th><button data-sort="mediaType" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Audience by Media Type</button></th>
+                  <th><button data-sort="publicity" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Publicity by Media Type</button></th>
                 </tr>
               </thead>
               <tbody id="placementsTableBody"></tbody>
@@ -348,29 +348,65 @@
         return result.map((item) => item.trim());
       }
 
-     function csvToObjects(text) {
-  const lines = text
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .filter((line) => line.trim().length > 0);
+   function csvToObjects(text) {
+  const cleaned = text.replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [];
+  let current = '';
+  let inQuotes = false;
 
-  if (lines.length < 2) {
+  for (let i = 0; i < cleaned.length; i += 1) {
+    const char = cleaned[i];
+    const next = cleaned[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      row.push(current.trim());
+      current = '';
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && next === '\n') {
+        i += 1;
+      }
+
+      row.push(current.trim());
+      current = '';
+
+      if (row.some((cell) => cell !== '')) {
+        rows.push(row);
+      }
+      row = [];
+    } else {
+      current += char;
+    }
+  }
+
+  if (current.length > 0 || row.length > 0) {
+    row.push(current.trim());
+    if (row.some((cell) => cell !== '')) {
+      rows.push(row);
+    }
+  }
+
+  if (rows.length < 2) {
     throw new Error('The CSV needs at least a header row and one data row.');
   }
 
-  const headers = parseCSVLine(lines[0]);
-  const rows = lines.slice(1).map((line) => parseCSVLine(line));
+  const headers = rows[0];
+  const dataRows = rows.slice(1);
 
-  return {
-    headers,
-    rows: rows.map((values) => {
-      const row = {};
-      headers.forEach((header, index) => {
-        row[header] = values[index] ?? '';
-      });
-      return row;
-    }),
-  };
+  return dataRows.map((values) => {
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = values[index] ?? '';
+    });
+    return obj;
+  });
 }
 
       function getColumnValue(row, aliases) {
@@ -417,11 +453,19 @@
         const grouped = {};
 
         rows.forEach((rawRow) => {
-          const mediaType = getColumnValue(rawRow, [
-            'type of media',
-            'type pf media',
-            'media type',
-          ]) || 'Other';
+   const title = getColumnValue(rawRow, ['title']);
+const link = getColumnValue(rawRow, ['link']);
+const date = getColumnValue(rawRow, ['date']);
+
+if (!title && !link && !date) {
+  return;
+}
+
+const mediaType = getColumnValue(rawRow, [
+  'media type',
+  'type of media',
+  'type pf media',
+]) || 'Other';
 
           if (!grouped[mediaType]) {
             grouped[mediaType] = {
@@ -517,8 +561,8 @@
           dma: getColumnValue(row, ['dma and targets', 'dma & targets', 'dma', 'targets']),
           title: getColumnValue(row, ['title']),
           link: getColumnValue(row, ['link']),
-          mediaType: getColumnValue(row, ['type of media', 'type pf media', 'media type']),
-          publicity: getColumnValue(row, ['publicity value', 'pubicity value', 'publicity']),
+         mediaType: getColumnValue(row, ['media type', 'type of media', 'type pf media']),
+        publicity: getColumnValue(row, ['publicity value', 'pubicity value', 'publicity']),
         };
       }
 
@@ -646,24 +690,19 @@
         renderTable(rows);
       }
 
-      function setMessage(text, isError = false) {
-        const box = document.getElementById('messageBox');
-        box.textContent = text;
-        box.className = isError ? 'text-sm text-red-600' : 'text-sm text-neutral-600';
-      }
-function validateRows(headers, rows) {
+      function validateRows(rows) {
   if (!rows.length) {
     throw new Error('The CSV file has no data rows.');
   }
 
-  const normalizedHeaders = headers.map((header) => normalizeKey(header));
+  const headers = Object.keys(rows[0]).map((header) => normalizeKey(header));
 
   const requiredChecks = [
     ['date'],
     ['station/publication', 'station / publication', 'publication', 'station'],
     ['tier'],
     ['audience/uvpm', 'audience / uvpm', 'audience', 'uvpm'],
-    ['dma and targets', 'dma & targets', 'dma', 'targets'],
+    ['dma and targets', 'dma & targets'],
     ['title'],
     ['link'],
     ['media type', 'type of media', 'type pf media'],
@@ -671,7 +710,7 @@ function validateRows(headers, rows) {
   ];
 
   const missing = requiredChecks.filter((aliases) =>
-    !aliases.some((alias) => normalizedHeaders.includes(alias))
+    !aliases.some((alias) => headers.includes(alias))
   );
 
   if (missing.length > 0) {
