@@ -8,9 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-
 
     <style>
       body {
@@ -20,31 +18,25 @@
       .table-scroll::-webkit-scrollbar {
         height: 10px;
       }
-
       .table-scroll::-webkit-scrollbar-track {
         background: #f1f3f5;
         border-radius: 999px;
       }
-
       .table-scroll::-webkit-scrollbar-thumb {
         background: #d0d5dd;
         border-radius: 999px;
       }
-
       .sort-btn {
         width: 100%;
       }
     </style>
   </head>
+
   <body class="min-h-screen bg-[#F7F7F8] text-neutral-900">
     <header class="bg-white border-b border-neutral-200 px-6 py-4">
       <div class="mx-auto max-w-7xl flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4 min-w-0">
-          <img
-            src="data:image/jpeg;base64,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"
-            alt="JOTO logo"
-            class="h-12 w-auto object-contain md:h-14"
-          />
+          <div class="h-12 w-12 rounded-xl bg-[#D8232A] text-white font-bold grid place-items-center">J</div>
           <div class="min-w-0">
             <input
               id="clientTitle"
@@ -52,7 +44,7 @@
               class="text-2xl md:text-3xl font-bold tracking-tight bg-transparent border-b-2 border-transparent focus:border-[#D8232A] outline-none w-full"
             />
             <p class="text-sm text-neutral-500 md:text-base">
-              Upload a CSV file and automatically generate mentions, audience, publicity, and a placement list. This is the JOTO way!
+              Upload a CSV and generate mentions, audience, publicity, and placement list.
             </p>
           </div>
         </div>
@@ -104,14 +96,11 @@
       </section>
 
       <div id="messageBox" class="text-sm text-neutral-600"></div>
-
       <div class="h-px w-full bg-[#EA3323]"></div>
 
       <section class="grid gap-5 xl:grid-cols-3">
         <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
-          <div class="mb-4 flex items-center justify-between gap-3">
-            <h3 class="text-lg font-semibold text-neutral-900 md:text-xl">Mentions by Media Type</h3>
-          </div>
+          <h3 class="text-lg font-semibold text-neutral-900 md:text-xl mb-4">Mentions by Media Type</h3>
           <div class="space-y-5">
             <div class="relative mx-auto h-[280px] max-w-[280px]">
               <canvas id="mentionsChart"></canvas>
@@ -125,9 +114,7 @@
         </div>
 
         <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
-          <div class="mb-4 flex items-center justify-between gap-3">
-            <h3 class="text-lg font-semibold text-neutral-900 md:text-xl">Audience by Media Type</h3>
-          </div>
+          <h3 class="text-lg font-semibold text-neutral-900 md:text-xl mb-4">Audience by Media Type</h3>
           <div class="space-y-5">
             <div class="relative mx-auto h-[280px] max-w-[280px]">
               <canvas id="audienceChart"></canvas>
@@ -141,9 +128,7 @@
         </div>
 
         <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
-          <div class="mb-4 flex items-center justify-between gap-3">
-            <h3 class="text-lg font-semibold text-neutral-900 md:text-xl">Publicity by Media Type</h3>
-          </div>
+          <h3 class="text-lg font-semibold text-neutral-900 md:text-xl mb-4">Publicity by Media Type</h3>
           <div class="space-y-5">
             <div class="relative mx-auto h-[280px] max-w-[280px]">
               <canvas id="publicityChart"></canvas>
@@ -158,11 +143,9 @@
       </section>
 
       <section class="space-y-5">
-        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h3 class="text-2xl font-semibold text-neutral-900">Placement List</h3>
-            <p class="text-neutral-500">Compact spreadsheet-style view showing all placement columns at once.</p>
-          </div>
+        <div>
+          <h3 class="text-2xl font-semibold text-neutral-900">Placement List</h3>
+          <p class="text-neutral-500">Spreadsheet-style view of all placements.</p>
         </div>
 
         <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
@@ -199,136 +182,41 @@
       };
 
       const SAMPLE_ROWS = [
-        {
-          Date: "2026-03-04",
-          "Station/Publication": "Forbes",
-          Tier: "Tier I",
-          "Audience/UVPM": "12400000",
-          "DMA and Targets": "Active individual investors and traders, finance professionals, and retirement-focused investors seeking real-time market insights, collaborative discussion, and peer support.",
-          Title: "How Brands Are Redefining Earned Media In 2026",
-          Link: "https://forbes.com/example-story",
-          "Media Type": "Online + Print",
-          "Publicity Value": "8200000"
-        },
-        {
-          Date: "2026-03-02",
-          "Station/Publication": "NBC Los Angeles",
-          Tier: "Tier II",
-          "Audience/UVPM": "4850000",
-          "DMA and Targets": "Los Angeles / Consumers",
-          Title: "JOTO Client Featured In Morning Segment On Industry Trends",
-          Link: "https://nbclosangeles.com/example-story",
-          "Media Type": "TV",
-          "Publicity Value": "1900000"
-        },
-        {
-          Date: "2026-02-28",
-          "Station/Publication": "Adweek",
-          Tier: "Tier I",
-          "Audience/UVPM": "3200000",
-          "DMA and Targets": "National / Marketing Decision Makers",
-          Title: "The PR Strategies Getting The Most Attention Right Now",
-          Link: "https://adweek.com/example-story",
-          "Media Type": "Online + Print",
-          "Publicity Value": "6100000"
-        },
-        {
-          Date: "2026-02-24",
-          "Station/Publication": "Business Insider",
-          Tier: "Tier I",
-          "Audience/UVPM": "8900000",
-          "DMA and Targets": "National / Startup Audience",
-          Title: "Why Founder Storytelling Is Driving Better Media Results",
-          Link: "https://businessinsider.com/example-story",
-          "Media Type": "Online + Print",
-          "Publicity Value": "5400000"
-        },
-        {
-          Date: "2026-02-19",
-          "Station/Publication": "Austin Business Journal",
-          Tier: "Tier III",
-          "Audience/UVPM": "780000",
-          "DMA and Targets": "Austin / Local Business Community",
-          Title: "Texas Brands Gain Momentum With Smarter Media Positioning",
-          Link: "https://bizjournals.com/example-story",
-          "Media Type": "Radio",
-          "Publicity Value": "870000"
-        },
-        {
-          Date: "2026-02-15",
-          "Station/Publication": "Fast Company Podcast",
-          Tier: "Tier I",
-          "Audience/UVPM": "5600000",
-          "DMA and Targets": "National / Innovation Audience",
-          Title: "What Modern PR Teams Need From Their Reporting Dashboards",
-          Link: "https://fastcompany.com/example-story",
-          "Media Type": "Podcasts",
-          "Publicity Value": "1210000"
-        },
-        {
-          Date: "2026-02-10",
-          "Station/Publication": "YouTube Finance Channel",
-          Tier: "Tier II",
-          "Audience/UVPM": "4800000",
-          "DMA and Targets": "Global / Retail investors",
-          Title: "Daily Market Breakdown With JOTO Client",
-          Link: "https://youtube.com/example-story",
-          "Media Type": "YouTube",
-          "Publicity Value": "160000"
-        }
+        { Date: "2026-03-04", "Station/Publication": "Forbes", Tier: "Tier I", "Audience/UVPM": "12400000", "DMA and Targets": "National", Title: "How Brands Are Redefining Earned Media", Link: "https://forbes.com", "Media Type": "Online + Print", "Publicity Value": "8200000" },
+        { Date: "2026-03-02", "Station/Publication": "NBC Los Angeles", Tier: "Tier II", "Audience/UVPM": "4850000", "DMA and Targets": "Los Angeles", Title: "Client Featured In Morning Segment", Link: "https://nbclosangeles.com", "Media Type": "TV", "Publicity Value": "1900000" }
       ];
 
-      let mentionsChart;
-      let audienceChart;
-      let publicityChart;
+      let mentionsChart, audienceChart, publicityChart;
       let currentRows = [];
       let currentSourceLabel = "No file uploaded";
       let currentSort = { key: "", direction: "asc" };
-
       const mediaOrder = ["Online + Print", "TV", "Radio", "Podcasts", "YouTube"];
 
-      function normalizeKey(value) {
-        return String(value || "")
-          .trim()
-          .toLowerCase()
-          .replace(/[\r\n]+/g, " ")
-          .replace(/\s+/g, " ")
-          .replace(/[“”]/g, '"');
+      function normalizeKey(v) {
+        return String(v || "").trim().toLowerCase().replace(/[\r\n]+/g, " ").replace(/\s+/g, " ");
       }
 
-      function toNumber(value) {
-        if (value === null || value === undefined) return 0;
-        const cleaned = String(value).replace(/[^0-9.-]/g, "");
-        const parsed = Number(cleaned);
-        return Number.isFinite(parsed) ? parsed : 0;
+      function toNumber(v) {
+        const n = Number(String(v ?? "").replace(/[^0-9.-]/g, ""));
+        return Number.isFinite(n) ? n : 0;
       }
 
-      function formatNumber(value) {
-        return new Intl.NumberFormat("en-US").format(value);
+      function formatNumber(v) {
+        return new Intl.NumberFormat("en-US").format(v);
       }
 
-      function formatCurrency(value) {
-        return new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 0,
-        }).format(value);
+      function formatCurrency(v) {
+        return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v);
       }
 
-      function escapeHtml(value) {
-        return String(value ?? "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+      function escapeHtml(v) {
+        return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
       }
 
       function safeUrl(url) {
         try {
-          const parsed = new URL(String(url || "").trim());
-          if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.href;
-          return "";
+          const u = new URL(String(url || "").trim());
+          return u.protocol === "http:" || u.protocol === "https:" ? u.href : "";
         } catch {
           return "";
         }
@@ -336,84 +224,62 @@
 
       function getColumnValue(row, aliases) {
         const normalizedAliases = aliases.map(normalizeKey);
-        for (const [key, value] of Object.entries(row)) {
-          if (normalizedAliases.includes(normalizeKey(key))) {
-            return value;
-          }
+        for (const [k, v] of Object.entries(row)) {
+          if (normalizedAliases.includes(normalizeKey(k))) return v;
         }
         return "";
       }
 
       function getMediaColor(mediaType) {
-        const normalized = normalizeKey(mediaType);
-        if (normalized.includes("tv")) return COLORS.tv;
-        if (normalized.includes("online") || normalized.includes("print")) return COLORS.onlinePrint;
-        if (normalized.includes("radio")) return COLORS.radio;
-        if (normalized.includes("podcast")) return COLORS.podcasts;
-        if (normalized.includes("youtube")) return COLORS.youtube;
+        const n = normalizeKey(mediaType);
+        if (n.includes("tv")) return COLORS.tv;
+        if (n.includes("online") || n.includes("print")) return COLORS.onlinePrint;
+        if (n.includes("radio")) return COLORS.radio;
+        if (n.includes("podcast")) return COLORS.podcasts;
+        if (n.includes("youtube")) return COLORS.youtube;
         return COLORS.other;
       }
 
       function csvToObjects(text) {
-        const cleaned = text.replace(/^\uFEFF/, "");
+        const cleaned = String(text || "").replace(/^\uFEFF/, "");
         const rows = [];
-        let row = [];
-        let current = "";
-        let inQuotes = false;
+        let row = [], current = "", inQuotes = false;
 
-        for (let i = 0; i < cleaned.length; i += 1) {
-          const char = cleaned[i];
-          const next = cleaned[i + 1];
+        for (let i = 0; i < cleaned.length; i++) {
+          const c = cleaned[i];
+          const n = cleaned[i + 1];
 
-          if (char === '"') {
-            if (inQuotes && next === '"') {
-              current += '"';
-              i += 1;
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (char === "," && !inQuotes) {
-            row.push(current.trim());
-            current = "";
-          } else if ((char === "\n" || char === "\r") && !inQuotes) {
-            if (char === "\r" && next === "\n") i += 1;
-            row.push(current.trim());
-            current = "";
-            if (row.some((cell) => cell !== "")) rows.push(row);
+          if (c === '"') {
+            if (inQuotes && n === '"') { current += '"'; i++; }
+            else inQuotes = !inQuotes;
+          } else if (c === "," && !inQuotes) {
+            row.push(current.trim()); current = "";
+          } else if ((c === "\n" || c === "\r") && !inQuotes) {
+            if (c === "\r" && n === "\n") i++;
+            row.push(current.trim()); current = "";
+            if (row.some((x) => x !== "")) rows.push(row);
             row = [];
-          } else {
-            current += char;
-          }
+          } else current += c;
         }
 
-        if (current.length > 0 || row.length > 0) {
+        if (current.length || row.length) {
           row.push(current.trim());
-          if (row.some((cell) => cell !== "")) rows.push(row);
+          if (row.some((x) => x !== "")) rows.push(row);
         }
 
-        if (rows.length < 2) {
-          throw new Error("The CSV needs at least a header row and one data row.");
-        }
+        if (rows.length < 2) throw new Error("CSV needs header + at least 1 data row.");
 
         const headers = rows[0];
-        const dataRows = rows.slice(1);
-
-        return dataRows.map((values) => {
+        return rows.slice(1).map((values) => {
           const obj = {};
-          headers.forEach((header, index) => {
-            obj[header] = values[index] ?? "";
-          });
+          headers.forEach((h, i) => { obj[h] = values[i] ?? ""; });
           return obj;
         });
       }
 
       function validateRows(rows) {
-        if (!rows.length) {
-          throw new Error("The CSV file has no data rows.");
-        }
-
-        const headers = Object.keys(rows[0]).map((header) => normalizeKey(header));
-
+        if (!rows.length) throw new Error("CSV has no data rows.");
+        const headers = Object.keys(rows[0]).map(normalizeKey);
         const requiredChecks = [
           ["date"],
           ["station/publication", "station / publication", "publication", "station"],
@@ -423,102 +289,57 @@
           ["title"],
           ["link"],
           ["media type", "type of media", "type pf media"],
-          ["publicity value", "pubicity value", "publicity"],
+          ["publicity value", "pubicity value", "publicity"]
         ];
-
-        const missing = requiredChecks.filter((aliases) => !aliases.some((alias) => headers.includes(alias)));
-
-        if (missing.length > 0) {
-          throw new Error("Some required CSV headers are missing. Check your column names.");
-        }
+        const missing = requiredChecks.filter((aliases) => !aliases.some((a) => headers.includes(a)));
+        if (missing.length) throw new Error("Some required CSV headers are missing.");
       }
 
       function aggregateByMedia(rows) {
         const grouped = {};
-
-        rows.forEach((rawRow) => {
-          const title = getColumnValue(rawRow, ["title"]);
-          const link = getColumnValue(rawRow, ["link"]);
-          const date = getColumnValue(rawRow, ["date"]);
+        rows.forEach((r) => {
+          const title = getColumnValue(r, ["title"]);
+          const link = getColumnValue(r, ["link"]);
+          const date = getColumnValue(r, ["date"]);
           if (!title && !link && !date) return;
 
-          const mediaType = getColumnValue(rawRow, ["media type", "type of media", "type pf media"]) || "Other";
-
-          if (!grouped[mediaType]) {
-            grouped[mediaType] = {
-              mediaType,
-              mentions: 0,
-              audience: 0,
-              publicity: 0,
-            };
-          }
+          const mediaType = getColumnValue(r, ["media type", "type of media", "type pf media"]) || "Other";
+          if (!grouped[mediaType]) grouped[mediaType] = { mediaType, mentions: 0, audience: 0, publicity: 0 };
 
           grouped[mediaType].mentions += 1;
-          grouped[mediaType].audience += toNumber(getColumnValue(rawRow, ["audience/uvpm", "audience / uvpm", "audience", "uvpm"]));
-          grouped[mediaType].publicity += toNumber(getColumnValue(rawRow, ["publicity value", "pubicity value", "publicity"]));
+          grouped[mediaType].audience += toNumber(getColumnValue(r, ["audience/uvpm", "audience / uvpm", "audience", "uvpm"]));
+          grouped[mediaType].publicity += toNumber(getColumnValue(r, ["publicity value", "pubicity value", "publicity"]));
         });
 
         return Object.values(grouped).sort((a, b) => {
-          const aIndex = mediaOrder.indexOf(a.mediaType);
-          const bIndex = mediaOrder.indexOf(b.mediaType);
-          if (aIndex === -1 && bIndex === -1) return a.mediaType.localeCompare(b.mediaType);
-          if (aIndex === -1) return 1;
-          if (bIndex === -1) return -1;
-          return aIndex - bIndex;
+          const ai = mediaOrder.indexOf(a.mediaType);
+          const bi = mediaOrder.indexOf(b.mediaType);
+          if (ai === -1 && bi === -1) return a.mediaType.localeCompare(b.mediaType);
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
         });
       }
 
-      function buildLegend(containerId, items, formatter) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = items
-          .map(
-            (item) => `
-              <div class="flex items-center justify-between gap-2 rounded-xl bg-neutral-50 px-2 py-1.5">
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="h-2.5 w-2.5 rounded-full shrink-0" style="background:${getMediaColor(item.mediaType)}"></span>
-                  <span class="truncate">${escapeHtml(item.mediaType)}</span>
-                </div>
-                <span class="font-medium text-neutral-800">${formatter(item)}</span>
-              </div>
-            `
-          )
-          .join("");
+      function buildLegend(id, items, formatter) {
+        const c = document.getElementById(id);
+        c.innerHTML = items.map((item) => `
+          <div class="flex items-center justify-between gap-2 rounded-xl bg-neutral-50 px-2 py-1.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="h-2.5 w-2.5 rounded-full shrink-0" style="background:${getMediaColor(item.mediaType)}"></span>
+              <span class="truncate">${escapeHtml(item.mediaType)}</span>
+            </div>
+            <span class="font-medium text-neutral-800">${formatter(item)}</span>
+          </div>
+        `).join("");
       }
 
-      function createOrUpdateChart(existingChart, canvasId, labels, data, colors) {
-        if (existingChart) existingChart.destroy();
-
-        const ctx = document.getElementById(canvasId);
-
-        return new Chart(ctx, {
+      function createOrUpdateChart(existing, id, labels, data, colors) {
+        if (existing) existing.destroy();
+        return new Chart(document.getElementById(id), {
           type: "doughnut",
-          data: {
-            labels,
-            datasets: [
-              {
-                data,
-                backgroundColor: colors,
-                borderColor: "#ffffff",
-                borderWidth: 2,
-                hoverOffset: 6,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: "62%",
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label(context) {
-                    return `${context.label}: ${context.formattedValue}`;
-                  },
-                },
-              },
-            },
-          },
+          data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: "#fff", borderWidth: 2, hoverOffset: 6 }] },
+          options: { responsive: true, maintainAspectRatio: false, cutout: "62%", plugins: { legend: { display: false } } }
         });
       }
 
@@ -536,119 +357,69 @@
         };
       }
 
-      function toTimestamp(value) {
-        const stamp = new Date(value || "").getTime();
-        return Number.isFinite(stamp) ? stamp : 0;
-      }
-
       function sortRows(rows) {
         if (!currentSort.key) return [...rows];
-        const direction = currentSort.direction === "asc" ? 1 : -1;
-
+        const d = currentSort.direction === "asc" ? 1 : -1;
         return [...rows].sort((a, b) => {
-          const rowA = getNormalizedRow(a);
-          const rowB = getNormalizedRow(b);
-
-          let valA = rowA[currentSort.key] || "";
-          let valB = rowB[currentSort.key] || "";
-
-          if (currentSort.key === "audience" || currentSort.key === "publicity") {
-            return (toNumber(valA) - toNumber(valB)) * direction;
-          }
-
-          if (currentSort.key === "date") {
-            return (toTimestamp(valA) - toTimestamp(valB)) * direction;
-          }
-
-          return String(valA).localeCompare(String(valB), undefined, { sensitivity: "base" }) * direction;
+          const A = getNormalizedRow(a), B = getNormalizedRow(b);
+          let vA = A[currentSort.key] || "", vB = B[currentSort.key] || "";
+          if (["audience", "publicity"].includes(currentSort.key)) return (toNumber(vA) - toNumber(vB)) * d;
+          if (currentSort.key === "date") return ((new Date(vA).getTime() || 0) - (new Date(vB).getTime() || 0)) * d;
+          return String(vA).localeCompare(String(vB), undefined, { sensitivity: "base" }) * d;
         });
       }
 
       function updateSortButtons() {
-        const baseLabels = {
-          date: "Date",
-          publication: "Station / Publication",
-          tier: "Tier",
-          audience: "Audience / UVPM",
-          dma: "DMA and Targets",
-          title: "Title",
-          link: "Link",
-          mediaType: "Media Type",
-          publicity: "Publicity Value",
-        };
-
+        const labels = { date: "Date", publication: "Station / Publication", tier: "Tier", audience: "Audience / UVPM", dma: "DMA and Targets", title: "Title", link: "Link", mediaType: "Media Type", publicity: "Publicity Value" };
         document.querySelectorAll(".sort-btn").forEach((btn) => {
           const key = btn.dataset.sort;
-          let label = baseLabels[key] || key;
-          if (currentSort.key === key) {
-            label += currentSort.direction === "asc" ? " ↑" : " ↓";
-          }
-          btn.textContent = label;
+          btn.textContent = labels[key] + (currentSort.key === key ? (currentSort.direction === "asc" ? " ↑" : " ↓") : "");
         });
       }
 
       function renderTable(rows) {
         const tbody = document.getElementById("placementsTableBody");
         const sortedRows = sortRows(rows);
-
-        tbody.innerHTML = sortedRows
-          .map((row, index) => {
-            const item = getNormalizedRow(row);
-            const rowClass = index % 2 === 0 ? "bg-white" : "bg-[#FCFCFD]";
-            const safeLink = safeUrl(item.link);
-
-            return `
-              <tr class="${rowClass}">
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${escapeHtml(item.date)}</td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 font-medium text-neutral-900">${escapeHtml(item.publication)}</td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">
-                  <span class="inline-flex rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">${escapeHtml(item.tier)}</span>
-                </td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${formatNumber(toNumber(item.audience))}</td>
-                <td class="min-w-[420px] border-b border-neutral-100 px-4 py-3 leading-6 text-neutral-700">${escapeHtml(item.dma)}</td>
-                <td class="min-w-[320px] border-b border-neutral-100 px-4 py-3 text-neutral-900">${escapeHtml(item.title)}</td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-[#D8232A]">
-                  ${safeLink ? `<a href="${safeLink}" target="_blank" rel="noopener noreferrer">${escapeHtml(safeLink)}</a>` : ""}
-                </td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${escapeHtml(item.mediaType)}</td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${formatCurrency(toNumber(item.publicity))}</td>
-              </tr>
-            `;
-          })
-          .join("");
-
+        tbody.innerHTML = sortedRows.map((row, i) => {
+          const x = getNormalizedRow(row), link = safeUrl(x.link), rc = i % 2 === 0 ? "bg-white" : "bg-[#FCFCFD]";
+          return `
+            <tr class="${rc}">
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(x.date)}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 font-medium">${escapeHtml(x.publication)}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3"><span class="inline-flex rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">${escapeHtml(x.tier)}</span></td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${formatNumber(toNumber(x.audience))}</td>
+              <td class="min-w-[420px] border-b border-neutral-100 px-4 py-3 leading-6">${escapeHtml(x.dma)}</td>
+              <td class="min-w-[320px] border-b border-neutral-100 px-4 py-3">${escapeHtml(x.title)}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-[#D8232A]">${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${escapeHtml(link)}</a>` : ""}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(x.mediaType)}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${formatCurrency(toNumber(x.publicity))}</td>
+            </tr>
+          `;
+        }).join("");
         updateSortButtons();
       }
 
       function populateTierFilter(rows) {
         const select = document.getElementById("tierFilter");
-        const currentValue = select.value;
-
+        const current = select.value;
         const defaultTiers = ["Tier I", "Tier II", "Tier III", "Tier IV", "Tier V", "Tier VI"];
-        const csvTiers = rows.map((row) => getColumnValue(row, ["tier"])).filter(Boolean);
+        const csvTiers = rows.map((r) => getColumnValue(r, ["tier"])).filter(Boolean);
         const tiers = [...new Set([...defaultTiers, ...csvTiers])];
-
-        select.innerHTML =
-          '<option value="">All tiers</option>' +
-          tiers.map((tier) => `<option value="${escapeHtml(tier)}">${escapeHtml(tier)}</option>`).join("");
-
-        select.value = tiers.includes(currentValue) ? currentValue : "";
+        select.innerHTML = '<option value="">All tiers</option>' + tiers.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+        select.value = tiers.includes(current) ? current : "";
       }
 
       function applyFilters(rows) {
-        const tierValue = document.getElementById("tierFilter").value;
-        const dateFrom = document.getElementById("dateFromFilter").value;
-        const dateTo = document.getElementById("dateToFilter").value;
-
-        return rows.filter((row) => {
-          const tier = getColumnValue(row, ["tier"]);
-          const date = getColumnValue(row, ["date"]);
-          const rowDate = date ? new Date(date) : null;
-
-          const tierOk = !tierValue || tier === tierValue;
-          const fromOk = !dateFrom || (rowDate && !Number.isNaN(rowDate.getTime()) && rowDate >= new Date(`${dateFrom}T00:00:00`));
-          const toOk = !dateTo || (rowDate && !Number.isNaN(rowDate.getTime()) && rowDate <= new Date(`${dateTo}T23:59:59`));
-
+        const tier = document.getElementById("tierFilter").value;
+        const from = document.getElementById("dateFromFilter").value;
+        const to = document.getElementById("dateToFilter").value;
+        return rows.filter((r) => {
+          const t = getColumnValue(r, ["tier"]);
+          const d = getColumnValue(r, ["date"]);
+          const rd = d ? new Date(d) : null;
+          const tierOk = !tier || t === tier;
+          const fromOk = !from || (rd && !Number.isNaN(rd.getTime()) && rd >= new Date(`${from}T00:00:00`));
+          const toOk = !to || (rd && !Number.isNaN(rd.getTime()) && rd <= new Date(`${to}T23:59:59`));
           return tierOk && fromOk && toOk;
         });
       }
@@ -660,26 +431,20 @@
 
       function updateDashboard(rows, sourceLabel) {
         const grouped = aggregateByMedia(rows);
+        const labels = grouped.map((x) => x.mediaType);
+        const mentions = grouped.map((x) => x.mentions);
+        const audience = grouped.map((x) => x.audience);
+        const publicity = grouped.map((x) => x.publicity);
+        const colors = grouped.map((x) => getMediaColor(x.mediaType));
 
-        const labels = grouped.map((item) => item.mediaType);
-        const mentions = grouped.map((item) => item.mentions);
-        const audience = grouped.map((item) => item.audience);
-        const publicity = grouped.map((item) => item.publicity);
-        const colors = grouped.map((item) => getMediaColor(item.mediaType));
-
-        const totalMentions = mentions.reduce((sum, value) => sum + value, 0);
-        const totalAudience = audience.reduce((sum, value) => sum + value, 0);
-        const totalPublicity = publicity.reduce((sum, value) => sum + value, 0);
-
-        document.getElementById("mentionsTotal").textContent = formatNumber(totalMentions);
-        document.getElementById("audienceTotal").textContent = formatNumber(totalAudience);
-        document.getElementById("publicityTotal").textContent = formatCurrency(totalPublicity);
+        document.getElementById("mentionsTotal").textContent = formatNumber(mentions.reduce((a, b) => a + b, 0));
+        document.getElementById("audienceTotal").textContent = formatNumber(audience.reduce((a, b) => a + b, 0));
+        document.getElementById("publicityTotal").textContent = formatCurrency(publicity.reduce((a, b) => a + b, 0));
 
         updateTopUI(rows, sourceLabel);
-
-        buildLegend("mentionsLegend", grouped, (item) => formatNumber(item.mentions));
-        buildLegend("audienceLegend", grouped, (item) => formatNumber(item.audience));
-        buildLegend("publicityLegend", grouped, (item) => formatCurrency(item.publicity));
+        buildLegend("mentionsLegend", grouped, (i) => formatNumber(i.mentions));
+        buildLegend("audienceLegend", grouped, (i) => formatNumber(i.audience));
+        buildLegend("publicityLegend", grouped, (i) => formatCurrency(i.publicity));
 
         mentionsChart = createOrUpdateChart(mentionsChart, "mentionsChart", labels, mentions, colors);
         audienceChart = createOrUpdateChart(audienceChart, "audienceChart", labels, audience, colors);
@@ -689,8 +454,7 @@
       }
 
       function refreshDashboardView() {
-        const filteredRows = applyFilters(currentRows);
-        updateDashboard(filteredRows, currentSourceLabel);
+        updateDashboard(applyFilters(currentRows), currentSourceLabel);
       }
 
       function setMessage(text, isError = false) {
@@ -707,9 +471,9 @@
           currentSourceLabel = sourceLabel;
           populateTierFilter(rows);
           refreshDashboardView();
-          setMessage("CSV loaded successfully. Charts and placement list were updated.");
-        } catch (error) {
-          setMessage(error.message || "Could not read the CSV file.", true);
+          setMessage("CSV loaded successfully.");
+        } catch (err) {
+          setMessage(err.message || "Could not read CSV.", true);
         }
       }
 
@@ -718,15 +482,13 @@
         currentSourceLabel = "Sample data";
         populateTierFilter(SAMPLE_ROWS);
         refreshDashboardView();
-        setMessage("Sample data loaded. Upload your own CSV when you are ready.");
       }
 
       document.getElementById("csvFile").addEventListener("change", (event) => {
-        const file = event.target.files && event.target.files[0];
+        const file = event.target.files?.[0];
         if (!file) return;
-
         const reader = new FileReader();
-        reader.onload = (loadEvent) => processCSVText(loadEvent.target.result, file.name);
+        reader.onload = (e) => processCSVText(e.target.result, file.name);
         reader.onerror = () => setMessage("The file could not be read.", true);
         reader.readAsText(file);
       });
@@ -745,108 +507,81 @@
       document.querySelectorAll(".sort-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const key = btn.dataset.sort;
-          if (currentSort.key === key) {
-            currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
-          } else {
-            currentSort.key = key;
-            currentSort.direction = "asc";
-          }
+          if (currentSort.key === key) currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
+          else { currentSort.key = key; currentSort.direction = "asc"; }
           renderTable(applyFilters(currentRows));
         });
       });
 
-      <script>
-  document.getElementById("exportPdfBtn").addEventListener("click", async () => {
-    const button = document.getElementById("exportPdfBtn");
-    const originalText = button.textContent;
+      document.getElementById("exportPdfBtn").addEventListener("click", async () => {
+        const button = document.getElementById("exportPdfBtn");
+        const originalText = button.textContent;
 
-    try {
-      button.textContent = "Exporting...";
-      button.disabled = true;
+        try {
+          button.textContent = "Exporting...";
+          button.disabled = true;
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+          const rows = sortRows(applyFilters(currentRows)).map(getNormalizedRow);
 
-      const rows = sortRows(applyFilters(currentRows)).map(getNormalizedRow);
+          const title = document.getElementById("clientTitle").value || "JOTO QBR";
+          const today = new Date().toLocaleDateString("en-US");
 
-      const title = document.getElementById("clientTitle").value || "JOTO QBR";
-      const today = new Date().toLocaleDateString("en-US");
+          doc.setFontSize(16);
+          doc.text(`${title} - Placement Report`, 10, 12);
+          doc.setFontSize(10);
+          doc.text(`Source: ${currentSourceLabel}`, 10, 18);
+          doc.text(`Rows: ${rows.length}`, 10, 23);
+          doc.text(`Generated: ${today}`, 10, 28);
 
-      // Header
-      doc.setFontSize(16);
-      doc.text(`${title} - Placement Report`, 10, 12);
-      doc.setFontSize(10);
-      doc.text(`Source: ${currentSourceLabel}`, 10, 18);
-      doc.text(`Rows: ${rows.length}`, 10, 23);
-      doc.text(`Generated: ${today}`, 10, 28);
+          doc.autoTable({
+            startY: 32,
+            head: [[
+              "Date", "Station / Publication", "Tier", "Audience", "DMA and Targets",
+              "Title", "Link", "Media Type", "Publicity Value"
+            ]],
+            body: rows.map((r) => [
+              r.date || "",
+              r.publication || "",
+              r.tier || "",
+              formatNumber(toNumber(r.audience)),
+              r.dma || "",
+              r.title || "",
+              r.link || "",
+              r.mediaType || "",
+              formatCurrency(toNumber(r.publicity))
+            ]),
+            styles: { fontSize: 8, cellPadding: 2, overflow: "linebreak", valign: "top" },
+            headStyles: { fillColor: [216, 35, 42], textColor: 255, fontStyle: "bold" },
+            alternateRowStyles: { fillColor: [248, 250, 252] },
+            columnStyles: {
+              0: { cellWidth: 20 }, 1: { cellWidth: 38 }, 2: { cellWidth: 12 },
+              3: { cellWidth: 22 }, 4: { cellWidth: 55 }, 5: { cellWidth: 45 },
+              6: { cellWidth: 35 }, 7: { cellWidth: 22 }, 8: { cellWidth: 24 }
+            },
+            margin: { top: 32, left: 8, right: 8, bottom: 12 },
+            didDrawPage: (data) => {
+              const pageCount = doc.internal.getNumberOfPages();
+              doc.setFontSize(8);
+              doc.text(`Page ${data.pageNumber} of ${pageCount}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 5);
+            }
+          });
 
-      // Table
-      doc.autoTable({
-        startY: 32,
-        head: [[
-          "Date",
-          "Station / Publication",
-          "Tier",
-          "Audience",
-          "DMA and Targets",
-          "Title",
-          "Link",
-          "Media Type",
-          "Publicity Value"
-        ]],
-        body: rows.map((r) => [
-          r.date || "",
-          r.publication || "",
-          r.tier || "",
-          formatNumber(toNumber(r.audience)),
-          r.dma || "",
-          r.title || "",
-          r.link || "",
-          r.mediaType || "",
-          formatCurrency(toNumber(r.publicity))
-        ]),
-        styles: {
-          fontSize: 8,
-          cellPadding: 2,
-          overflow: "linebreak",
-          valign: "top"
-        },
-        headStyles: {
-          fillColor: [216, 35, 42], // JOTO red
-          textColor: 255,
-          fontStyle: "bold"
-        },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: {
-          0: { cellWidth: 20 }, // Date
-          1: { cellWidth: 38 }, // Publication
-          2: { cellWidth: 12 }, // Tier
-          3: { cellWidth: 22 }, // Audience
-          4: { cellWidth: 55 }, // DMA
-          5: { cellWidth: 45 }, // Title
-          6: { cellWidth: 35 }, // Link
-          7: { cellWidth: 22 }, // Media type
-          8: { cellWidth: 24 }  // Publicity
-        },
-        margin: { top: 32, left: 8, right: 8, bottom: 12 },
-        didDrawPage: (data) => {
-          const pageCount = doc.internal.getNumberOfPages();
-          doc.setFontSize(8);
-          doc.text(`Page ${data.pageNumber} of ${pageCount}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 5);
+          doc.save("joto-qbr-report.pdf");
+          setMessage("PDF exported successfully.");
+        } catch (error) {
+          setMessage("Could not export PDF.", true);
+        } finally {
+          button.textContent = originalText;
+          button.disabled = false;
         }
       });
 
-      doc.save("joto-qbr-report.pdf");
-      setMessage("PDF exported successfully.");
-    } catch (error) {
-      setMessage("Could not export PDF.", true);
-    } finally {
-      button.textContent = originalText;
-      button.disabled = false;
-    }
-  });
-
-      loadSampleData();
+      document.addEventListener("DOMContentLoaded", () => {
+        setMessage("Ready. Please upload a CSV file.");
+        loadSampleData();
+      });
     </script>
   </body>
 </html>
