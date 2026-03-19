@@ -50,7 +50,7 @@
               class="text-2xl md:text-3xl font-bold tracking-tight bg-transparent border-b-2 border-transparent focus:border-[#D8232A] outline-none w-full"
             />
             <p class="text-sm text-neutral-500 md:text-base">
-              Upload a CSV file and automatically generate mentions, audience, publicity, and a placement list.
+              Upload a CSV file and automatically generate mentions, audience, publicity, and a placement list. This is the JOTO way!
             </p>
           </div>
         </div>
@@ -313,6 +313,25 @@
         }).format(value);
       }
 
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function safeUrl(url) {
+        try {
+          const parsed = new URL(String(url || "").trim());
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.href;
+          return "";
+        } catch {
+          return "";
+        }
+      }
+
       function getColumnValue(row, aliases) {
         const normalizedAliases = aliases.map(normalizeKey);
         for (const [key, value] of Object.entries(row)) {
@@ -355,16 +374,10 @@
             row.push(current.trim());
             current = "";
           } else if ((char === "\n" || char === "\r") && !inQuotes) {
-            if (char === "\r" && next === "\n") {
-              i += 1;
-            }
-
+            if (char === "\r" && next === "\n") i += 1;
             row.push(current.trim());
             current = "";
-
-            if (row.some((cell) => cell !== "")) {
-              rows.push(row);
-            }
+            if (row.some((cell) => cell !== "")) rows.push(row);
             row = [];
           } else {
             current += char;
@@ -373,9 +386,7 @@
 
         if (current.length > 0 || row.length > 0) {
           row.push(current.trim());
-          if (row.some((cell) => cell !== "")) {
-            rows.push(row);
-          }
+          if (row.some((cell) => cell !== "")) rows.push(row);
         }
 
         if (rows.length < 2) {
@@ -413,9 +424,7 @@
           ["publicity value", "pubicity value", "publicity"],
         ];
 
-        const missing = requiredChecks.filter((aliases) =>
-          !aliases.some((alias) => headers.includes(alias))
-        );
+        const missing = requiredChecks.filter((aliases) => !aliases.some((alias) => headers.includes(alias)));
 
         if (missing.length > 0) {
           throw new Error("Some required CSV headers are missing. Check your column names.");
@@ -429,11 +438,9 @@
           const title = getColumnValue(rawRow, ["title"]);
           const link = getColumnValue(rawRow, ["link"]);
           const date = getColumnValue(rawRow, ["date"]);
-
           if (!title && !link && !date) return;
 
-          const mediaType =
-            getColumnValue(rawRow, ["media type", "type of media", "type pf media"]) || "Other";
+          const mediaType = getColumnValue(rawRow, ["media type", "type of media", "type pf media"]) || "Other";
 
           if (!grouped[mediaType]) {
             grouped[mediaType] = {
@@ -445,12 +452,8 @@
           }
 
           grouped[mediaType].mentions += 1;
-          grouped[mediaType].audience += toNumber(
-            getColumnValue(rawRow, ["audience/uvpm", "audience / uvpm", "audience", "uvpm"])
-          );
-          grouped[mediaType].publicity += toNumber(
-            getColumnValue(rawRow, ["publicity value", "pubicity value", "publicity"])
-          );
+          grouped[mediaType].audience += toNumber(getColumnValue(rawRow, ["audience/uvpm", "audience / uvpm", "audience", "uvpm"]));
+          grouped[mediaType].publicity += toNumber(getColumnValue(rawRow, ["publicity value", "pubicity value", "publicity"]));
         });
 
         return Object.values(grouped).sort((a, b) => {
@@ -471,7 +474,7 @@
               <div class="flex items-center justify-between gap-2 rounded-xl bg-neutral-50 px-2 py-1.5">
                 <div class="flex items-center gap-2 min-w-0">
                   <span class="h-2.5 w-2.5 rounded-full shrink-0" style="background:${getMediaColor(item.mediaType)}"></span>
-                  <span class="truncate">${item.mediaType}</span>
+                  <span class="truncate">${escapeHtml(item.mediaType)}</span>
                 </div>
                 <span class="font-medium text-neutral-800">${formatter(item)}</span>
               </div>
@@ -531,6 +534,11 @@
         };
       }
 
+      function toTimestamp(value) {
+        const stamp = new Date(value || "").getTime();
+        return Number.isFinite(stamp) ? stamp : 0;
+      }
+
       function sortRows(rows) {
         if (!currentSort.key) return [...rows];
         const direction = currentSort.direction === "asc" ? 1 : -1;
@@ -543,20 +551,14 @@
           let valB = rowB[currentSort.key] || "";
 
           if (currentSort.key === "audience" || currentSort.key === "publicity") {
-            valA = toNumber(valA);
-            valB = toNumber(valB);
-            return (valA - valB) * direction;
+            return (toNumber(valA) - toNumber(valB)) * direction;
           }
 
           if (currentSort.key === "date") {
-            valA = new Date(valA || 0).getTime();
-            valB = new Date(valB || 0).getTime();
-            return (valA - valB) * direction;
+            return (toTimestamp(valA) - toTimestamp(valB)) * direction;
           }
 
-          return String(valA).localeCompare(String(valB), undefined, {
-            sensitivity: "base",
-          }) * direction;
+          return String(valA).localeCompare(String(valB), undefined, { sensitivity: "base" }) * direction;
         });
       }
 
@@ -591,24 +593,23 @@
           .map((row, index) => {
             const item = getNormalizedRow(row);
             const rowClass = index % 2 === 0 ? "bg-white" : "bg-[#FCFCFD]";
+            const safeLink = safeUrl(item.link);
 
             return `
               <tr class="${rowClass}">
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${item.date || ""}</td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 font-medium text-neutral-900">${item.publication || ""}</td>
+                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${escapeHtml(item.date)}</td>
+                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 font-medium text-neutral-900">${escapeHtml(item.publication)}</td>
                 <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">
-                  <span class="inline-flex rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">${item.tier || ""}</span>
+                  <span class="inline-flex rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">${escapeHtml(item.tier)}</span>
                 </td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${item.audience || ""}</td>
-                <td class="min-w-[420px] border-b border-neutral-100 px-4 py-3 leading-6 text-neutral-700">${item.dma || ""}</td>
-                <td class="min-w-[320px] border-b border-neutral-100 px-4 py-3 text-neutral-900">${item.title || ""}</td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-[#D8232A]">${
-                  item.link
-                    ? `<a href="${item.link}" target="_blank" rel="noopener noreferrer">${item.link}</a>`
-                    : ""
-                }</td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${item.mediaType || ""}</td>
-                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${item.publicity || ""}</td>
+                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${formatNumber(toNumber(item.audience))}</td>
+                <td class="min-w-[420px] border-b border-neutral-100 px-4 py-3 leading-6 text-neutral-700">${escapeHtml(item.dma)}</td>
+                <td class="min-w-[320px] border-b border-neutral-100 px-4 py-3 text-neutral-900">${escapeHtml(item.title)}</td>
+                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-[#D8232A]">
+                  ${safeLink ? `<a href="${safeLink}" target="_blank" rel="noopener noreferrer">${escapeHtml(safeLink)}</a>` : ""}
+                </td>
+                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${escapeHtml(item.mediaType)}</td>
+                <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-neutral-700">${formatCurrency(toNumber(item.publicity))}</td>
               </tr>
             `;
           })
@@ -618,22 +619,18 @@
       }
 
       function populateTierFilter(rows) {
-  const select = document.getElementById("tierFilter");
-  const currentValue = select.value;
+        const select = document.getElementById("tierFilter");
+        const currentValue = select.value;
 
-  const defaultTiers = ["Tier III", "Tier IV", "Tier V", "Tier VI"];
-  const csvTiers = rows
-    .map((row) => getColumnValue(row, ["tier"]))
-    .filter(Boolean);
+        const defaultTiers = ["Tier I", "Tier II", "Tier III", "Tier IV", "Tier V", "Tier VI"];
+        const csvTiers = rows.map((row) => getColumnValue(row, ["tier"])).filter(Boolean);
+        const tiers = [...new Set([...defaultTiers, ...csvTiers])];
 
-  const tiers = [...new Set([...defaultTiers, ...csvTiers])];
+        select.innerHTML =
+          '<option value="">All tiers</option>' +
+          tiers.map((tier) => `<option value="${escapeHtml(tier)}">${escapeHtml(tier)}</option>`).join("");
 
-  select.innerHTML =
-    '<option value="">All tiers</option>' +
-    tiers.map((tier) => `<option value="${tier}">${tier}</option>`).join("");
-
-  select.value = tiers.includes(currentValue) ? currentValue : "";
-}
+        select.value = tiers.includes(currentValue) ? currentValue : "";
       }
 
       function applyFilters(rows) {
@@ -647,16 +644,8 @@
           const rowDate = date ? new Date(date) : null;
 
           const tierOk = !tierValue || tier === tierValue;
-          const fromOk =
-            !dateFrom ||
-            (rowDate &&
-              !Number.isNaN(rowDate.getTime()) &&
-              rowDate >= new Date(`${dateFrom}T00:00:00`));
-          const toOk =
-            !dateTo ||
-            (rowDate &&
-              !Number.isNaN(rowDate.getTime()) &&
-              rowDate <= new Date(`${dateTo}T23:59:59`));
+          const fromOk = !dateFrom || (rowDate && !Number.isNaN(rowDate.getTime()) && rowDate >= new Date(`${dateFrom}T00:00:00`));
+          const toOk = !dateTo || (rowDate && !Number.isNaN(rowDate.getTime()) && rowDate <= new Date(`${dateTo}T23:59:59`));
 
           return tierOk && fromOk && toOk;
         });
@@ -735,12 +724,8 @@
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (loadEvent) => {
-          processCSVText(loadEvent.target.result, file.name);
-        };
-        reader.onerror = () => {
-          setMessage("The file could not be read.", true);
-        };
+        reader.onload = (loadEvent) => processCSVText(loadEvent.target.result, file.name);
+        reader.onerror = () => setMessage("The file could not be read.", true);
         reader.readAsText(file);
       });
 
@@ -769,9 +754,10 @@
       });
 
       document.getElementById("exportPdfBtn").addEventListener("click", async () => {
+        const button = document.getElementById("exportPdfBtn");
+        const originalText = button.textContent;
+
         try {
-          const button = document.getElementById("exportPdfBtn");
-          const originalText = button.textContent;
           button.textContent = "Exporting...";
           button.disabled = true;
 
@@ -809,14 +795,12 @@
           }
 
           pdf.save("joto-qbr-dashboard.pdf");
-
-          button.textContent = originalText;
-          button.disabled = false;
           setMessage("PDF exported successfully.");
         } catch (error) {
-          document.getElementById("exportPdfBtn").textContent = "Export PDF";
-          document.getElementById("exportPdfBtn").disabled = false;
           setMessage("Could not export PDF.", true);
+        } finally {
+          button.textContent = originalText;
+          button.disabled = false;
         }
       });
 
