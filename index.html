@@ -9,6 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+
 
     <style>
       body {
@@ -753,56 +755,96 @@
         });
       });
 
-      document.getElementById("exportPdfBtn").addEventListener("click", async () => {
-        const button = document.getElementById("exportPdfBtn");
-        const originalText = button.textContent;
+      <script>
+  document.getElementById("exportPdfBtn").addEventListener("click", async () => {
+    const button = document.getElementById("exportPdfBtn");
+    const originalText = button.textContent;
 
-        try {
-          button.textContent = "Exporting...";
-          button.disabled = true;
+    try {
+      button.textContent = "Exporting...";
+      button.disabled = true;
 
-          const dashboard = document.getElementById("dashboardContent");
-          const canvas = await html2canvas(dashboard, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: "#F7F7F8",
-            windowWidth: document.documentElement.scrollWidth,
-          });
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
-          const { jsPDF } = window.jspdf;
-          const pdf = new jsPDF("l", "mm", "a4");
-          const pageWidth = pdf.internal.pageSize.getWidth();
-          const pageHeight = pdf.internal.pageSize.getHeight();
-          const margin = 10;
-          const usableWidth = pageWidth - margin * 2;
-          const usableHeight = pageHeight - margin * 2;
+      const rows = sortRows(applyFilters(currentRows)).map(getNormalizedRow);
 
-          const imgData = canvas.toDataURL("image/png");
-          const imgWidth = usableWidth;
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const title = document.getElementById("clientTitle").value || "JOTO QBR";
+      const today = new Date().toLocaleDateString("en-US");
 
-          let heightLeft = imgHeight;
-          let position = margin;
+      // Header
+      doc.setFontSize(16);
+      doc.text(`${title} - Placement Report`, 10, 12);
+      doc.setFontSize(10);
+      doc.text(`Source: ${currentSourceLabel}`, 10, 18);
+      doc.text(`Rows: ${rows.length}`, 10, 23);
+      doc.text(`Generated: ${today}`, 10, 28);
 
-          pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
-          heightLeft -= usableHeight;
-
-          while (heightLeft > 0) {
-            position = heightLeft - imgHeight + margin;
-            pdf.addPage();
-            pdf.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
-            heightLeft -= usableHeight;
-          }
-
-          pdf.save("joto-qbr-dashboard.pdf");
-          setMessage("PDF exported successfully.");
-        } catch (error) {
-          setMessage("Could not export PDF.", true);
-        } finally {
-          button.textContent = originalText;
-          button.disabled = false;
+      // Table
+      doc.autoTable({
+        startY: 32,
+        head: [[
+          "Date",
+          "Station / Publication",
+          "Tier",
+          "Audience",
+          "DMA and Targets",
+          "Title",
+          "Link",
+          "Media Type",
+          "Publicity Value"
+        ]],
+        body: rows.map((r) => [
+          r.date || "",
+          r.publication || "",
+          r.tier || "",
+          formatNumber(toNumber(r.audience)),
+          r.dma || "",
+          r.title || "",
+          r.link || "",
+          r.mediaType || "",
+          formatCurrency(toNumber(r.publicity))
+        ]),
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+          overflow: "linebreak",
+          valign: "top"
+        },
+        headStyles: {
+          fillColor: [216, 35, 42], // JOTO red
+          textColor: 255,
+          fontStyle: "bold"
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { cellWidth: 20 }, // Date
+          1: { cellWidth: 38 }, // Publication
+          2: { cellWidth: 12 }, // Tier
+          3: { cellWidth: 22 }, // Audience
+          4: { cellWidth: 55 }, // DMA
+          5: { cellWidth: 45 }, // Title
+          6: { cellWidth: 35 }, // Link
+          7: { cellWidth: 22 }, // Media type
+          8: { cellWidth: 24 }  // Publicity
+        },
+        margin: { top: 32, left: 8, right: 8, bottom: 12 },
+        didDrawPage: (data) => {
+          const pageCount = doc.internal.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.text(`Page ${data.pageNumber} of ${pageCount}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 5);
         }
       });
+
+      doc.save("joto-qbr-report.pdf");
+      setMessage("PDF exported successfully.");
+    } catch (error) {
+      setMessage("Could not export PDF.", true);
+    } finally {
+      button.textContent = originalText;
+      button.disabled = false;
+    }
+  });
 
       loadSampleData();
     </script>
