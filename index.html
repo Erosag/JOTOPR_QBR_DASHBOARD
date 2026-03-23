@@ -196,6 +196,10 @@
         return String(v || "").trim().toLowerCase().replace(/[\r\n]+/g, " ").replace(/\s+/g, " ");
       }
 
+      function normalizeTier(value) {
+        return String(value || "").replace(/^tier\s*/i, "").trim().toUpperCase();
+      }
+
       function toNumber(v) {
         const n = Number(String(v ?? "").replace(/[^0-9.-]/g, ""));
         return Number.isFinite(n) ? n : 0;
@@ -402,9 +406,14 @@
       function populateTierFilter(rows) {
         const select = document.getElementById("tierFilter");
         const current = select.value;
-        const csvTiers = rows.map((r) => getColumnValue(r, ["tier"])).filter(Boolean);
-        const tiers = [...new Set([...defaultTiers, ...csvTiers])];
-        select.innerHTML = '<option value="">All tiers</option>' + tiers.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+
+        const tiers = [...new Set(
+          rows.map((r) => normalizeTier(getColumnValue(r, ["tier"]))).filter(Boolean)
+        )];
+
+        select.innerHTML = '<option value="">All tiers</option>' +
+          tiers.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+
         select.value = tiers.includes(current) ? current : "";
       }
 
@@ -412,11 +421,15 @@
         const tier = document.getElementById("tierFilter").value;
         const from = document.getElementById("dateFromFilter").value;
         const to = document.getElementById("dateToFilter").value;
+
         return rows.filter((r) => {
-          const t = getColumnValue(r, ["tier"]);
+          const tierRaw = getColumnValue(r, ["tier"]);
+          const tierNormalized = normalizeTier(tierRaw);
+
           const d = getColumnValue(r, ["date"]);
           const rd = d ? new Date(d) : null;
-          const tierOk = !tier || t === tier;
+
+          const tierOk = !tier || tierNormalized === tier;
           const fromOk = !from || (rd && !Number.isNaN(rd.getTime()) && rd >= new Date(`${from}T00:00:00`));
           const toOk = !to || (rd && !Number.isNaN(rd.getTime()) && rd <= new Date(`${to}T23:59:59`));
           return tierOk && fromOk && toOk;
@@ -530,12 +543,11 @@
           doc.setFontSize(16);
           doc.text(`${title} - Placement Report`, 10, 12);
           doc.setFontSize(10);
-          doc.text(`Source: ${currentSourceLabel}`, 10, 18);
-          doc.text(`Rows: ${rows.length}`, 10, 23);
-          doc.text(`Generated: ${today}`, 10, 28);
+          doc.text(`Rows: ${rows.length}`, 10, 18);
+          doc.text(`Generated: ${today}`, 10, 23);
 
           doc.autoTable({
-            startY: 32,
+            startY: 27,
             head: [[
               "Date", "Station / Publication", "Tier", "Audience", "DMA and Targets",
               "Title", "Link", "Media Type", "Publicity Value"
@@ -543,7 +555,7 @@
             body: rows.map((r) => [
               r.date || "",
               r.publication || "",
-              r.tier || "",
+              normalizeTier(r.tier || ""),
               formatNumber(toNumber(r.audience)),
               r.dma || "",
               r.title || "",
@@ -555,11 +567,25 @@
             headStyles: { fillColor: [216, 35, 42], textColor: 255, fontStyle: "bold" },
             alternateRowStyles: { fillColor: [248, 250, 252] },
             columnStyles: {
-              0: { cellWidth: 20 }, 1: { cellWidth: 38 }, 2: { cellWidth: 12 },
-              3: { cellWidth: 22 }, 4: { cellWidth: 55 }, 5: { cellWidth: 45 },
-              6: { cellWidth: 35 }, 7: { cellWidth: 22 }, 8: { cellWidth: 24 }
+              0: { cellWidth: 20 },
+              1: { cellWidth: 38 },
+              2: { cellWidth: 12 },
+              3: { cellWidth: 22 },
+              4: { cellWidth: 55 },
+              5: { cellWidth: 45 },
+              6: { cellWidth: 35, textColor: [30, 64, 175] },
+              7: { cellWidth: 22 },
+              8: { cellWidth: 24 }
             },
-            margin: { top: 32, left: 8, right: 8, bottom: 12 },
+            margin: { top: 27, left: 8, right: 8, bottom: 12 },
+            didDrawCell: (data) => {
+              if (data.section === "body" && data.column.index === 6) {
+                const url = safeUrl(rows[data.row.index]?.link);
+                if (url) {
+                  doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
+                }
+              }
+            },
             didDrawPage: (data) => {
               const pageCount = doc.internal.getNumberOfPages();
               doc.setFontSize(8);
