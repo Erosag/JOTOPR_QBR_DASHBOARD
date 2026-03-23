@@ -402,7 +402,6 @@
       function populateTierFilter(rows) {
         const select = document.getElementById("tierFilter");
         const current = select.value;
-        const defaultTiers = ["Tier I", "Tier II", "Tier III", "Tier IV", "Tier V", "Tier VI"];
         const csvTiers = rows.map((r) => getColumnValue(r, ["tier"])).filter(Boolean);
         const tiers = [...new Set([...defaultTiers, ...csvTiers])];
         select.innerHTML = '<option value="">All tiers</option>' + tiers.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
