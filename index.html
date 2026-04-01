@@ -305,8 +305,8 @@
           ["publicity value", "pubicity value", "publicity"]
         ];
 
-        const missing = requiredChecks.filter((aliases) =>
-          !aliases.some((a) => headers.includes(normalizeKey(a)))
+        const missing = requiredChecks.filter(
+          (aliases) => !aliases.some((a) => headers.includes(normalizeKey(a)))
         );
 
         if (missing.length) {
@@ -584,4 +584,46 @@
             headStyles: { fillColor: [216, 35, 42], textColor: 255, fontStyle: "bold" },
             alternateRowStyles: { fillColor: [248, 250, 252] },
             columnStyles: {
-              0: { cellWidth:
+              0: { cellWidth: 20 },
+              1: { cellWidth: 38 },
+              2: { cellWidth: 12 },
+              3: { cellWidth: 22 },
+              4: { cellWidth: 55 },
+              5: { cellWidth: 45 },
+              6: { cellWidth: 35, textColor: [30, 64, 175] },
+              7: { cellWidth: 22 },
+              8: { cellWidth: 24 }
+            },
+            margin: { top: 27, left: 8, right: 8, bottom: 12 },
+            didDrawCell: (data) => {
+              if (data.section === "body" && data.column.index === 6) {
+                const url = safeUrl(rows[data.row.index]?.link);
+                if (url) {
+                  doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
+                }
+              }
+            },
+            didDrawPage: (data) => {
+              const pageCount = doc.internal.getNumberOfPages();
+              doc.setFontSize(8);
+              doc.text(`Page ${data.pageNumber} of ${pageCount}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 5);
+            }
+          });
+
+          doc.save("joto-qbr-report.pdf");
+          setMessage("PDF exported successfully.");
+        } catch (error) {
+          setMessage("Could not export PDF.", true);
+        } finally {
+          button.textContent = originalText;
+          button.disabled = false;
+        }
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        setMessage("Ready. Please upload a CSV file.");
+        loadSampleData();
+      });
+    </script>
+  </body>
+</html>
