@@ -177,7 +177,7 @@
         online: "#DB2229",
         print: "#4A9614",
         radio: "#F5B041",
-        podcasts: "#8E44AD",
+        podcast: "#8E44AD",
         youtube: "#EF7109",
         other: "#16A085",
       };
@@ -246,11 +246,12 @@
       function getMediaColor(mediaType) {
         const n = normalizeKey(mediaType);
         if (n.includes("tv")) return COLORS.tv;
-        if (n.includes("online") return COLORS.online;
-        if (n.includes("print")) return COLORS.print:
+        if (n.includes("online")) return COLORS.online;
+        if (n.includes("print")) return COLORS.print;
         if (n.includes("radio")) return COLORS.radio;
-        if (n.includes("podcast")) return COLORS.podcasts;
+        if (n.includes("podcast")) return COLORS.podcast;
         if (n.includes("youtube")) return COLORS.youtube;
+        
         return COLORS.other;
       }
 
