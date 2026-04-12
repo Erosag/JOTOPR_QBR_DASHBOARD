@@ -289,7 +289,18 @@
       }
 
       function csvToObjects(text) {
-        const cleaned = String(text || "").replace(/^\uFEFF/, "");
+        const cleaned = String(text || "").replace(/^\uFEFF/, "").trim();
+        if (!cleaned) throw new Error("CSV is empty.");
+
+        const firstLine = cleaned.split(/\r\n|\n|\r/)[0] || "";
+        const commaCount = (firstLine.match(/,/g) || []).length;
+        const semicolonCount = (firstLine.match(/;/g) || []).length;
+        const tabCount = (firstLine.match(/\t/g) || []).length;
+
+        let delimiter = ",";
+        if (semicolonCount > commaCount && semicolonCount >= tabCount) delimiter = ";";
+        if (tabCount > commaCount && tabCount > semicolonCount) delimiter = "\t";
+
         const rows = [];
         let row = [], current = "", inQuotes = false;
 
@@ -304,7 +315,7 @@
             } else {
               inQuotes = !inQuotes;
             }
-          } else if (c === "," && !inQuotes) {
+          } else if (c === delimiter && !inQuotes) {
             row.push(cleanCell(current.trim()));
             current = "";
           } else if ((c === "\n" || c === "\r") && !inQuotes) {
@@ -323,12 +334,14 @@
           if (row.some((x) => x !== "")) rows.push(row);
         }
 
-        if (rows.length < 2) throw new Error("CSV needs header + at least 1 data row.");
+        if (rows.length < 2) {
+          throw new Error("CSV must contain a header row and at least one data row.");
+        }
 
-        const headers = rows[0];
+        const headers = rows[0].map((h) => cleanCell(h));
         return rows.slice(1).map((values) => {
           const obj = {};
-          headers.forEach((h, i) => { obj[cleanCell(h)] = cleanCell(values[i] ?? ""); });
+          headers.forEach((h, i) => { obj[h] = cleanCell(values[i] ?? ""); });
           return obj;
         });
       }
@@ -503,11 +516,16 @@
 
       async function readCsvText(file) {
         const buf = await file.arrayBuffer();
+
         try {
           return new TextDecoder("utf-8", { fatal: true }).decode(buf);
-        } catch {
-          return new TextDecoder("utf-16le").decode(buf);
-        }
+        } catch {}
+
+        try {
+          return new TextDecoder("utf-16le", { fatal: true }).decode(buf);
+        } catch {}
+
+        return new TextDecoder("windows-1252").decode(buf);
       }
 
       document.getElementById("csvFile").addEventListener("change", async (event) => {
