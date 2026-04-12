@@ -14,7 +14,6 @@
       body {
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
-
       .table-scroll::-webkit-scrollbar {
         height: 10px;
       }
@@ -44,7 +43,7 @@
               class="text-2xl md:text-3xl font-bold tracking-tight bg-transparent border-b-2 border-transparent focus:border-[#D8232A] outline-none w-full"
             />
             <p class="text-sm text-neutral-500 md:text-base">
-              Upload a CSV and generate mentions, audience, publicity, and placement list.
+              Upload CSV and generate mentions, audience, publicity, and placement list.
             </p>
           </div>
         </div>
@@ -101,43 +100,34 @@
       <section class="grid gap-5 xl:grid-cols-3">
         <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
           <h3 class="text-lg font-semibold text-neutral-900 md:text-xl mb-4">Mentions by Media Type</h3>
-          <div class="space-y-5">
-            <div class="relative mx-auto h-[280px] max-w-[280px]">
-              <canvas id="mentionsChart"></canvas>
-              <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                <div id="mentionsTotal" class="text-3xl font-bold tracking-tight text-neutral-950">0</div>
-                <div class="mt-1 text-sm text-neutral-500">Mentions</div>
-              </div>
+          <div class="relative mx-auto h-[280px] max-w-[280px]">
+            <canvas id="mentionsChart"></canvas>
+            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+              <div id="mentionsTotal" class="text-3xl font-bold tracking-tight text-neutral-950">0</div>
+              <div class="mt-1 text-sm text-neutral-500">Mentions</div>
             </div>
-            <div id="mentionsLegend" class="grid grid-cols-2 gap-2 text-xs text-neutral-600"></div>
           </div>
         </div>
 
         <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
           <h3 class="text-lg font-semibold text-neutral-900 md:text-xl mb-4">Audience by Media Type</h3>
-          <div class="space-y-5">
-            <div class="relative mx-auto h-[280px] max-w-[280px]">
-              <canvas id="audienceChart"></canvas>
-              <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-3 text-center">
-                <div id="audienceTotal" class="text-2xl font-bold tracking-tight text-neutral-950 md:text-3xl">0</div>
-                <div class="mt-1 text-sm text-neutral-500">Audience</div>
-              </div>
+          <div class="relative mx-auto h-[280px] max-w-[280px]">
+            <canvas id="audienceChart"></canvas>
+            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+              <div id="audienceTotal" class="text-2xl font-bold tracking-tight text-neutral-950 md:text-3xl">0</div>
+              <div class="mt-1 text-sm text-neutral-500">Audience</div>
             </div>
-            <div id="audienceLegend" class="grid grid-cols-2 gap-2 text-xs text-neutral-600"></div>
           </div>
         </div>
 
         <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
           <h3 class="text-lg font-semibold text-neutral-900 md:text-xl mb-4">Publicity by Media Type</h3>
-          <div class="space-y-5">
-            <div class="relative mx-auto h-[280px] max-w-[280px]">
-              <canvas id="publicityChart"></canvas>
-              <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-3 text-center">
-                <div id="publicityTotal" class="text-2xl font-bold tracking-tight text-neutral-950 md:text-3xl">$0</div>
-                <div class="mt-1 text-sm text-neutral-500">Publicity</div>
-              </div>
+          <div class="relative mx-auto h-[280px] max-w-[280px]">
+            <canvas id="publicityChart"></canvas>
+            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+              <div id="publicityTotal" class="text-2xl font-bold tracking-tight text-neutral-950 md:text-3xl">$0</div>
+              <div class="mt-1 text-sm text-neutral-500">Publicity</div>
             </div>
-            <div id="publicityLegend" class="grid grid-cols-2 gap-2 text-xs text-neutral-600"></div>
           </div>
         </div>
       </section>
@@ -145,7 +135,7 @@
       <section class="space-y-5">
         <div>
           <h3 class="text-2xl font-semibold text-neutral-900">Placement List</h3>
-          <p class="text-neutral-500">Spreadsheet-style view of all placements.</p>
+          <p class="text-neutral-500">Filtered rows used in charts and PDF export.</p>
         </div>
 
         <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
@@ -157,7 +147,6 @@
                   <th><button data-sort="publication" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Station / Publication</button></th>
                   <th><button data-sort="tier" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Tier</button></th>
                   <th><button data-sort="audience" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Audience / UVPM</button></th>
-                  <th><button data-sort="dma" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">DMA and Targets</button></th>
                   <th><button data-sort="title" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Title</button></th>
                   <th><button data-sort="link" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Link</button></th>
                   <th><button data-sort="mediaType" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Media Type</button></th>
@@ -172,41 +161,26 @@
     </main>
 
     <script>
-      const COLORS = {
+      const COLOR_MAP = {
         tv: "#2E86DE",
-        online: "#DB2229",
-        print: "#4A9614",
+        onlinePrint: "#27AE60",
         radio: "#F5B041",
-        podcast: "#8E44AD",
-        youtube: "#EF7109",
+        podcasts: "#8E44AD",
+        youtube: "#5D6D7E",
         other: "#16A085",
       };
-
-      const SAMPLE_ROWS = [
-        { Date: "2026-03-04", "Station/Publication": "Forbes", Tier: "Tier I", "Audience/UVPM": "12400000", "DMA and Targets": "National", Title: "How Brands Are Redefining Earned Media", Link: "https://forbes.com", "Media Type": "Online + Print", "Publicity Value": "8200000" },
-        { Date: "2026-03-02", "Station/Publication": "NBC Los Angeles", Tier: "Tier II", "Audience/UVPM": "4850000", "DMA and Targets": "Los Angeles", Title: "Client Featured In Morning Segment", Link: "https://nbclosangeles.com", "Media Type": "TV", "Publicity Value": "1900000" }
-      ];
 
       let mentionsChart, audienceChart, publicityChart;
       let currentRows = [];
       let currentSourceLabel = "No file uploaded";
       let currentSort = { key: "", direction: "asc" };
-      const mediaOrder = ["Online + Print", "TV", "Radio", "Podcasts", "YouTube"];
 
       function normalizeKey(v) {
-        return String(v || "")
-          .replace(/^\uFEFF/, "")
-          .replace(/["'`]/g, "")
-          .replace(/[\r\n]+/g, " ")
-          .replace(/\s*\/\s*/g, "/")
-          .replace(/\s*&\s*/g, " and ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .toLowerCase();
+        return String(v || "").trim().toLowerCase().replace(/[\r\n]+/g, " ").replace(/\s+/g, " ");
       }
 
-      function normalizeTier(value) {
-        return String(value || "").replace(/^tier\s*/i, "").trim().toUpperCase();
+      function normalizeTier(v) {
+        return String(v || "").replace(/^tier\s*/i, "").trim().toUpperCase();
       }
 
       function toNumber(v) {
@@ -219,11 +193,20 @@
       }
 
       function formatCurrency(v) {
-        return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v);
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        }).format(v);
       }
 
       function escapeHtml(v) {
-        return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        return String(v ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
       }
 
       function safeUrl(url) {
@@ -235,24 +218,74 @@
         }
       }
 
+      function fixMojibake(text) {
+        let s = String(text ?? "");
+        s = s.replace(/\u0000/g, "");
+        s = s.replace(/[\u200B-\u200D\uFEFF]/g, "");
+        s = s.replace(/Ã¡/g, "á").replace(/Ã©/g, "é").replace(/Ã­/g, "í").replace(/Ã³/g, "ó").replace(/Ãº/g, "ú");
+        s = s.replace(/Ã±/g, "ñ").replace(/Ã"/g, "Ó").replace(/Ã/g, "Á");
+        s = s.replace(/â€™/g, "'").replace(/â€œ|â€/g, '"').replace(/â€“/g, "-").replace(/Â/g, "");
+        s = s.replace(/ÿ/g, " ");
+        s = s.replace(/\b(?:[A-Za-z]\s){3,}[A-Za-z]\b/g, (m) => m.replace(/\s+/g, ""));
+        s = s.replace(/\s+/g, " ").trim();
+        return s;
+      }
+
+      function cleanCell(value) {
+        return fixMojibake(value);
+      }
+
+      function parseDate(value) {
+        if (!value) return null;
+        if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+
+        if (typeof value === "number" && Number.isFinite(value) && value > 20000 && value < 100000) {
+          const utcDays = Math.floor(value - 25569);
+          return new Date(utcDays * 86400 * 1000);
+        }
+
+        const raw = String(value).trim();
+        const direct = new Date(raw);
+        if (!Number.isNaN(direct.getTime())) return direct;
+
+        const mdy = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+        if (mdy) {
+          const yyyy = mdy[3].length === 2 ? Number(`20${mdy[3]}`) : Number(mdy[3]);
+          const d = new Date(yyyy, Number(mdy[1]) - 1, Number(mdy[2]));
+          if (!Number.isNaN(d.getTime())) return d;
+        }
+        return null;
+      }
+
       function getColumnValue(row, aliases) {
-        const normalizedAliases = aliases.map(normalizeKey);
+        const nAliases = aliases.map(normalizeKey);
         for (const [k, v] of Object.entries(row)) {
-          if (normalizedAliases.includes(normalizeKey(k))) return v;
+          if (nAliases.includes(normalizeKey(k))) return v;
         }
         return "";
       }
 
+      function getMappedRow(row) {
+        return {
+          date: cleanCell(getColumnValue(row, ["date", "publish date", "publication date"])),
+          publication: cleanCell(getColumnValue(row, ["station/publication", "station / publication", "publication", "station", "outlet"])),
+          tier: cleanCell(getColumnValue(row, ["tier", "media tier"])),
+          audience: cleanCell(getColumnValue(row, ["audience/uvpm", "audience / uvpm", "audience", "uvpm", "reach", "impressions"])),
+          title: cleanCell(getColumnValue(row, ["title", "headline"])),
+          link: cleanCell(getColumnValue(row, ["link", "url"])),
+          mediaType: cleanCell(getColumnValue(row, ["media type", "type of media", "type pf media", "media"])),
+          publicity: cleanCell(getColumnValue(row, ["publicity value", "pubicity value", "publicity", "ave"])),
+        };
+      }
+
       function getMediaColor(mediaType) {
         const n = normalizeKey(mediaType);
-        if (n.includes("tv")) return COLORS.tv;
-        if (n.includes("online")) return COLORS.online;
-        if (n.includes("print")) return COLORS.print;
-        if (n.includes("radio")) return COLORS.radio;
-        if (n.includes("podcast")) return COLORS.podcast;
-        if (n.includes("youtube")) return COLORS.youtube;
-        
-        return COLORS.other;
+        if (n.includes("tv")) return COLOR_MAP.tv;
+        if (n.includes("online") || n.includes("print")) return COLOR_MAP.onlinePrint;
+        if (n.includes("radio")) return COLOR_MAP.radio;
+        if (n.includes("podcast")) return COLOR_MAP.podcasts;
+        if (n.includes("youtube")) return COLOR_MAP.youtube;
+        return COLOR_MAP.other;
       }
 
       function csvToObjects(text) {
@@ -265,20 +298,28 @@
           const n = cleaned[i + 1];
 
           if (c === '"') {
-            if (inQuotes && n === '"') { current += '"'; i++; }
-            else inQuotes = !inQuotes;
+            if (inQuotes && n === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
           } else if (c === "," && !inQuotes) {
-            row.push(current.trim()); current = "";
+            row.push(cleanCell(current.trim()));
+            current = "";
           } else if ((c === "\n" || c === "\r") && !inQuotes) {
             if (c === "\r" && n === "\n") i++;
-            row.push(current.trim()); current = "";
+            row.push(cleanCell(current.trim()));
+            current = "";
             if (row.some((x) => x !== "")) rows.push(row);
             row = [];
-          } else current += c;
+          } else {
+            current += c;
+          }
         }
 
         if (current.length || row.length) {
-          row.push(current.trim());
+          row.push(cleanCell(current.trim()));
           if (row.some((x) => x !== "")) rows.push(row);
         }
 
@@ -287,7 +328,7 @@
         const headers = rows[0];
         return rows.slice(1).map((values) => {
           const obj = {};
-          headers.forEach((h, i) => { obj[h] = values[i] ?? ""; });
+          headers.forEach((h, i) => { obj[cleanCell(h)] = cleanCell(values[i] ?? ""); });
           return obj;
         });
       }
@@ -296,66 +337,32 @@
         if (!rows.length) throw new Error("CSV has no data rows.");
 
         const headers = Object.keys(rows[0]).map(normalizeKey);
-        const requiredChecks = [
-          ["date"],
-          ["station/publication", "station / publication", "publication", "station"],
-          ["tier"],
-          ["audience/uvpm", "audience / uvpm", "audience", "uvpm"],
-          ["dma and targets", "dma & targets", "dma", "targets"],
-          ["title"],
-          ["link"],
-          ["media type", "type of media", "type pf media"],
-          ["publicity value", "pubicity value", "publicity"]
-        ];
+        const hasMediaType = ["media type", "type of media", "type pf media", "media"].some((h) => headers.includes(h));
+        if (!hasMediaType) throw new Error("Missing required header: Media Type.");
 
-        const missing = requiredChecks.filter(
-          (aliases) => !aliases.some((a) => headers.includes(normalizeKey(a)))
-        );
+        const hasAudience = ["audience/uvpm", "audience / uvpm", "audience", "uvpm", "reach", "impressions"].some((h) => headers.includes(h));
+        const hasPublicity = ["publicity value", "pubicity value", "publicity", "ave"].some((h) => headers.includes(h));
 
-        if (missing.length) {
-          throw new Error(
-            'Missing required CSV headers. Expected: Date, "Station/Publication", Tier, "Audience/UVPM", DMA and Targets, Title, Link, Media Type, Publicity Value.'
-          );
+        if (!hasAudience || !hasPublicity) {
+          setMessage("Some optional headers are missing (Audience/Publicity). Missing values will be treated as 0.");
         }
       }
 
       function aggregateByMedia(rows) {
         const grouped = {};
         rows.forEach((r) => {
-          const title = getColumnValue(r, ["title"]);
-          const link = getColumnValue(r, ["link"]);
-          const date = getColumnValue(r, ["date"]);
-          if (!title && !link && !date) return;
+          const x = getMappedRow(r);
+          if (!x.mediaType && !x.title && !x.link && !x.date) return;
 
-          const mediaType = getColumnValue(r, ["media type", "type of media", "type pf media"]) || "Other";
+          const mediaType = x.mediaType || "Other";
           if (!grouped[mediaType]) grouped[mediaType] = { mediaType, mentions: 0, audience: 0, publicity: 0 };
 
           grouped[mediaType].mentions += 1;
-          grouped[mediaType].audience += toNumber(getColumnValue(r, ["audience/uvpm", "audience / uvpm", "audience", "uvpm"]));
-          grouped[mediaType].publicity += toNumber(getColumnValue(r, ["publicity value", "pubicity value", "publicity"]));
+          grouped[mediaType].audience += toNumber(x.audience);
+          grouped[mediaType].publicity += toNumber(x.publicity);
         });
 
-        return Object.values(grouped).sort((a, b) => {
-          const ai = mediaOrder.indexOf(a.mediaType);
-          const bi = mediaOrder.indexOf(b.mediaType);
-          if (ai === -1 && bi === -1) return a.mediaType.localeCompare(b.mediaType);
-          if (ai === -1) return 1;
-          if (bi === -1) return -1;
-          return ai - bi;
-        });
-      }
-
-      function buildLegend(id, items, formatter) {
-        const c = document.getElementById(id);
-        c.innerHTML = items.map((item) => `
-          <div class="flex items-center justify-between gap-2 rounded-xl bg-neutral-50 px-2 py-1.5">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="h-2.5 w-2.5 rounded-full shrink-0" style="background:${getMediaColor(item.mediaType)}"></span>
-              <span class="truncate">${escapeHtml(item.mediaType)}</span>
-            </div>
-            <span class="font-medium text-neutral-800">${formatter(item)}</span>
-          </div>
-        `).join("");
+        return Object.values(grouped).sort((a, b) => b.mentions - a.mentions);
       }
 
       function createOrUpdateChart(existing, id, labels, data, colors) {
@@ -367,34 +374,29 @@
         });
       }
 
-      function getNormalizedRow(row) {
-        return {
-          date: getColumnValue(row, ["date"]),
-          publication: getColumnValue(row, ["station/publication", "station / publication", "publication", "station"]),
-          tier: getColumnValue(row, ["tier"]),
-          audience: getColumnValue(row, ["audience/uvpm", "audience / uvpm", "audience", "uvpm"]),
-          dma: getColumnValue(row, ["dma and targets", "dma & targets", "dma", "targets"]),
-          title: getColumnValue(row, ["title"]),
-          link: getColumnValue(row, ["link"]),
-          mediaType: getColumnValue(row, ["media type", "type of media", "type pf media"]),
-          publicity: getColumnValue(row, ["publicity value", "pubicity value", "publicity"]),
-        };
-      }
-
       function sortRows(rows) {
         if (!currentSort.key) return [...rows];
         const d = currentSort.direction === "asc" ? 1 : -1;
         return [...rows].sort((a, b) => {
-          const A = getNormalizedRow(a), B = getNormalizedRow(b);
+          const A = getMappedRow(a), B = getMappedRow(b);
           let vA = A[currentSort.key] || "", vB = B[currentSort.key] || "";
           if (["audience", "publicity"].includes(currentSort.key)) return (toNumber(vA) - toNumber(vB)) * d;
-          if (currentSort.key === "date") return ((new Date(vA).getTime() || 0) - (new Date(vB).getTime() || 0)) * d;
+          if (currentSort.key === "date") return ((parseDate(vA)?.getTime() || 0) - (parseDate(vB)?.getTime() || 0)) * d;
           return String(vA).localeCompare(String(vB), undefined, { sensitivity: "base" }) * d;
         });
       }
 
       function updateSortButtons() {
-        const labels = { date: "Date", publication: "Station / Publication", tier: "Tier", audience: "Audience / UVPM", dma: "DMA and Targets", title: "Title", link: "Link", mediaType: "Media Type", publicity: "Publicity Value" };
+        const labels = {
+          date: "Date",
+          publication: "Station / Publication",
+          tier: "Tier",
+          audience: "Audience / UVPM",
+          title: "Title",
+          link: "Link",
+          mediaType: "Media Type",
+          publicity: "Publicity Value",
+        };
         document.querySelectorAll(".sort-btn").forEach((btn) => {
           const key = btn.dataset.sort;
           btn.textContent = labels[key] + (currentSort.key === key ? (currentSort.direction === "asc" ? " ↑" : " ↓") : "");
@@ -404,61 +406,53 @@
       function renderTable(rows) {
         const tbody = document.getElementById("placementsTableBody");
         const sortedRows = sortRows(rows);
+
         tbody.innerHTML = sortedRows.map((row, i) => {
-          const x = getNormalizedRow(row), link = safeUrl(x.link), rc = i % 2 === 0 ? "bg-white" : "bg-[#FCFCFD]";
+          const x = getMappedRow(row);
+          const link = safeUrl(x.link);
+          const rc = i % 2 === 0 ? "bg-white" : "bg-[#FCFCFD]";
           return `
             <tr class="${rc}">
               <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(x.date)}</td>
               <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 font-medium">${escapeHtml(x.publication)}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3"><span class="inline-flex rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">${escapeHtml(x.tier)}</span></td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(normalizeTier(x.tier))}</td>
               <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${formatNumber(toNumber(x.audience))}</td>
-              <td class="min-w-[420px] border-b border-neutral-100 px-4 py-3 leading-6">${escapeHtml(x.dma)}</td>
-              <td class="min-w-[320px] border-b border-neutral-100 px-4 py-3">${escapeHtml(x.title)}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 text-[#D8232A]">${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${escapeHtml(link)}</a>` : ""}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(x.mediaType)}</td>
+              <td class="border-b border-neutral-100 px-4 py-3">${escapeHtml(x.title)}</td>
+              <td class="border-b border-neutral-100 px-4 py-3 text-[#D8232A]">${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${escapeHtml(link)}</a>` : ""}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(x.mediaType || "Other")}</td>
               <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${formatCurrency(toNumber(x.publicity))}</td>
             </tr>
           `;
         }).join("");
+
         updateSortButtons();
       }
 
       function populateTierFilter(rows) {
         const select = document.getElementById("tierFilter");
         const current = select.value;
-
-        const tiers = [...new Set(
-          rows.map((r) => normalizeTier(getColumnValue(r, ["tier"]))).filter(Boolean)
-        )];
-
-        select.innerHTML = '<option value="">All tiers</option>' +
-          tiers.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
-
+        const tiers = [...new Set(rows.map((r) => normalizeTier(getMappedRow(r).tier)).filter(Boolean))];
+        select.innerHTML = '<option value="">All tiers</option>' + tiers.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
         select.value = tiers.includes(current) ? current : "";
       }
 
       function applyFilters(rows) {
-        const tier = document.getElementById("tierFilter").value;
+        const tierValue = document.getElementById("tierFilter").value;
         const from = document.getElementById("dateFromFilter").value;
         const to = document.getElementById("dateToFilter").value;
+        const fromDate = from ? new Date(`${from}T00:00:00`) : null;
+        const toDate = to ? new Date(`${to}T23:59:59`) : null;
 
         return rows.filter((r) => {
-          const tierRaw = getColumnValue(r, ["tier"]);
-          const tierNormalized = normalizeTier(tierRaw);
+          const x = getMappedRow(r);
+          const tierOk = !tierValue || normalizeTier(x.tier) === tierValue;
 
-          const d = getColumnValue(r, ["date"]);
-          const rd = d ? new Date(d) : null;
+          const d = parseDate(x.date);
+          const fromOk = !fromDate || (d && d >= fromDate);
+          const toOk = !toDate || (d && d <= toDate);
 
-          const tierOk = !tier || tierNormalized === tier;
-          const fromOk = !from || (rd && !Number.isNaN(rd.getTime()) && rd >= new Date(`${from}T00:00:00`));
-          const toOk = !to || (rd && !Number.isNaN(rd.getTime()) && rd <= new Date(`${to}T23:59:59`));
           return tierOk && fromOk && toOk;
         });
-      }
-
-      function updateTopUI(rows, fileName) {
-        document.getElementById("rowsLoaded").textContent = formatNumber(rows.length);
-        document.getElementById("fileNameLabel").textContent = fileName;
       }
 
       function updateDashboard(rows, sourceLabel) {
@@ -472,11 +466,8 @@
         document.getElementById("mentionsTotal").textContent = formatNumber(mentions.reduce((a, b) => a + b, 0));
         document.getElementById("audienceTotal").textContent = formatNumber(audience.reduce((a, b) => a + b, 0));
         document.getElementById("publicityTotal").textContent = formatCurrency(publicity.reduce((a, b) => a + b, 0));
-
-        updateTopUI(rows, sourceLabel);
-        buildLegend("mentionsLegend", grouped, (i) => formatNumber(i.mentions));
-        buildLegend("audienceLegend", grouped, (i) => formatNumber(i.audience));
-        buildLegend("publicityLegend", grouped, (i) => formatCurrency(i.publicity));
+        document.getElementById("rowsLoaded").textContent = formatNumber(rows.length);
+        document.getElementById("fileNameLabel").textContent = sourceLabel;
 
         mentionsChart = createOrUpdateChart(mentionsChart, "mentionsChart", labels, mentions, colors);
         audienceChart = createOrUpdateChart(audienceChart, "audienceChart", labels, audience, colors);
@@ -486,7 +477,8 @@
       }
 
       function refreshDashboardView() {
-        updateDashboard(applyFilters(currentRows), currentSourceLabel);
+        const filtered = applyFilters(currentRows);
+        updateDashboard(filtered, currentSourceLabel);
       }
 
       function setMessage(text, isError = false) {
@@ -509,20 +501,25 @@
         }
       }
 
-      function loadSampleData() {
-        currentRows = SAMPLE_ROWS;
-        currentSourceLabel = "Sample data";
-        populateTierFilter(SAMPLE_ROWS);
-        refreshDashboardView();
+      async function readCsvText(file) {
+        const buf = await file.arrayBuffer();
+        try {
+          return new TextDecoder("utf-8", { fatal: true }).decode(buf);
+        } catch {
+          return new TextDecoder("utf-16le").decode(buf);
+        }
       }
 
-      document.getElementById("csvFile").addEventListener("change", (event) => {
+      document.getElementById("csvFile").addEventListener("change", async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => processCSVText(e.target.result, file.name);
-        reader.onerror = () => setMessage("The file could not be read.", true);
-        reader.readAsText(file);
+
+        try {
+          const text = await readCsvText(file);
+          processCSVText(text, file.name);
+        } catch {
+          setMessage("Could not read CSV encoding.", true);
+        }
       });
 
       document.getElementById("tierFilter").addEventListener("change", refreshDashboardView);
@@ -550,67 +547,86 @@
         const originalText = button.textContent;
 
         try {
+          const rows = sortRows(applyFilters(currentRows)).map(getMappedRow);
+          if (!rows.length) {
+            setMessage("No rows to export.", true);
+            return;
+          }
+
           button.textContent = "Exporting...";
           button.disabled = true;
 
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-          const rows = sortRows(applyFilters(currentRows)).map(getNormalizedRow);
 
           const title = document.getElementById("clientTitle").value || "JOTO QBR";
           const today = new Date().toLocaleDateString("en-US");
 
           doc.setFontSize(16);
-          doc.text(`${title} - Placement Report`, 10, 12);
+          doc.text(`${cleanCell(title)} - Placement Report`, 10, 12);
           doc.setFontSize(10);
           doc.text(`Rows: ${rows.length}`, 10, 18);
           doc.text(`Generated: ${today}`, 10, 23);
 
+          const pageW = doc.internal.pageSize.getWidth();
+          const chartY = 28;
+          const chartW = (pageW - 40) / 3;
+          const chartH = 58;
+
+          const mCanvas = document.getElementById("mentionsChart");
+          const aCanvas = document.getElementById("audienceChart");
+          const pCanvas = document.getElementById("publicityChart");
+
+          doc.text("Mentions", 10, chartY - 2);
+          doc.addImage(mCanvas.toDataURL("image/png", 1), "PNG", 10, chartY, chartW, chartH);
+
+          doc.text("Audience", 15 + chartW, chartY - 2);
+          doc.addImage(aCanvas.toDataURL("image/png", 1), "PNG", 15 + chartW, chartY, chartW, chartH);
+
+          doc.text("Publicity", 20 + chartW * 2, chartY - 2);
+          doc.addImage(pCanvas.toDataURL("image/png", 1), "PNG", 20 + chartW * 2, chartY, chartW, chartH);
+
+          const body = rows.map((r) => [
+            cleanCell(r.date || ""),
+            cleanCell(r.publication || ""),
+            cleanCell(normalizeTier(r.tier || "")),
+            cleanCell(formatNumber(toNumber(r.audience))),
+            cleanCell(r.title || ""),
+            cleanCell(safeUrl(r.link) || ""),
+            cleanCell(r.mediaType || "Other"),
+            cleanCell(formatCurrency(toNumber(r.publicity))),
+          ]);
+
           doc.autoTable({
-            startY: 27,
+            startY: 90,
             head: [[
-              "Date", "Station / Publication", "Tier", "Audience", "DMA and Targets",
+              "Date", "Station / Publication", "Tier", "Audience",
               "Title", "Link", "Media Type", "Publicity Value"
             ]],
-            body: rows.map((r) => [
-              r.date || "",
-              r.publication || "",
-              normalizeTier(r.tier || ""),
-              formatNumber(toNumber(r.audience)),
-              r.dma || "",
-              r.title || "",
-              r.link || "",
-              r.mediaType || "",
-              formatCurrency(toNumber(r.publicity))
-            ]),
+            body,
             styles: { fontSize: 8, cellPadding: 2, overflow: "linebreak", valign: "top" },
             headStyles: { fillColor: [216, 35, 42], textColor: 255, fontStyle: "bold" },
-            alternateRowStyles: { fillColor: [248, 250, 252] },
             columnStyles: {
               0: { cellWidth: 20 },
-              1: { cellWidth: 38 },
+              1: { cellWidth: 40 },
               2: { cellWidth: 12 },
               3: { cellWidth: 22 },
-              4: { cellWidth: 55 },
-              5: { cellWidth: 45 },
-              6: { cellWidth: 35, textColor: [30, 64, 175] },
-              7: { cellWidth: 22 },
-              8: { cellWidth: 24 }
+              4: { cellWidth: 58 },
+              5: { cellWidth: 48, textColor: [30, 64, 175] },
+              6: { cellWidth: 24 },
+              7: { cellWidth: 24 },
             },
-            margin: { top: 27, left: 8, right: 8, bottom: 12 },
             didDrawCell: (data) => {
-              if (data.section === "body" && data.column.index === 6) {
-                const url = safeUrl(rows[data.row.index]?.link);
-                if (url) {
-                  doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
-                }
+              if (data.section === "body" && data.column.index === 5) {
+                const url = body[data.row.index][5];
+                if (url) doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
               }
             },
             didDrawPage: (data) => {
               const pageCount = doc.internal.getNumberOfPages();
               doc.setFontSize(8);
               doc.text(`Page ${data.pageNumber} of ${pageCount}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 5);
-            }
+            },
           });
 
           doc.save("joto-qbr-report.pdf");
@@ -621,11 +637,6 @@
           button.textContent = originalText;
           button.disabled = false;
         }
-      });
-
-      document.addEventListener("DOMContentLoaded", () => {
-        setMessage("Ready. Please upload a CSV file.");
-        loadSampleData();
       });
     </script>
   </body>
