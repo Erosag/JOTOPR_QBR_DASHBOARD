@@ -184,53 +184,10 @@
         return String(v || "").replace(/^tier\s*/i, "").trim().toUpperCase();
       }
 
-    function toNumber(v) {
-  if (typeof v === "number" && Number.isFinite(v)) return v;
-
-  let raw = String(v ?? "").trim();
-  if (!raw) return 0;
-
-  let multiplier = 1;
-  const suffix = raw.match(/([kmb])\s*$/i);
-  if (suffix) {
-    const s = suffix[1].toLowerCase();
-    if (s === "k") multiplier = 1_000;
-    if (s === "m") multiplier = 1_000_000;
-    if (s === "b") multiplier = 1_000_000_000;
-    raw = raw.replace(/([kmb])\s*$/i, "");
-  }
-
-  raw = raw.replace(/[^\d,.\-]/g, "");
-
-  const commaCount = (raw.match(/,/g) || []).length;
-  const dotCount = (raw.match(/\./g) || []).length;
-
-  if (commaCount > 0 && dotCount > 0) {
-    if (raw.lastIndexOf(",") > raw.lastIndexOf(".")) {
-      raw = raw.replace(/\./g, "").replace(",", ".");
-    } else {
-      raw = raw.replace(/,/g, "");
-    }
-  } else if (commaCount > 0) {
-    if (commaCount > 1) {
-      raw = raw.replace(/,/g, "");
-    } else {
-      const [left, right] = raw.split(",");
-      raw = right && right.length <= 2 ? `${left}.${right}` : `${left}${right || ""}`;
-    }
-  } else if (dotCount > 0) {
-    if (dotCount > 1) {
-      raw = raw.replace(/\./g, "");
-    } else {
-      const [left, right] = raw.split(".");
-      raw = right && right.length === 3 ? `${left}${right}` : raw;
-    }
-  }
-
-  const n = Number(raw);
-  return Number.isFinite(n) ? n * multiplier : 0;
-}
-
+      function toNumber(v) {
+        const n = Number(String(v ?? "").replace(/[^0-9.-]/g, ""));
+        return Number.isFinite(n) ? n : 0;
+      }
 
       function formatNumber(v) {
         return new Intl.NumberFormat("en-US").format(v);
