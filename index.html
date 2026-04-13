@@ -6,7 +6,7 @@
     <title>JOTO QBR Dashboard</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -177,7 +177,12 @@
       let currentSort = { key: "", direction: "asc" };
 
       function normalizeKey(v) {
-        return String(v || "").trim().toLowerCase().replace(/[\r\n]+/g, " ").replace(/\s+/g, " ");
+        return String(v || "")
+          .trim()
+          .toLowerCase()
+          .replace(/^\uFEFF/, "")
+          .replace(/[\r\n]+/g, " ")
+          .replace(/\s+/g, " ");
       }
 
       function normalizeTier(v) {
@@ -185,12 +190,54 @@
       }
 
       function toNumber(v) {
-        const n = Number(String(v ?? "").replace(/[^0-9.-]/g, ""));
-        return Number.isFinite(n) ? n : 0;
+        if (typeof v === "number" && Number.isFinite(v)) return v;
+
+        let raw = String(v ?? "").trim();
+        if (!raw) return 0;
+
+        let multiplier = 1;
+        const suffix = raw.match(/([kmb])\s*$/i);
+        if (suffix) {
+          const s = suffix[1].toLowerCase();
+          if (s === "k") multiplier = 1_000;
+          if (s === "m") multiplier = 1_000_000;
+          if (s === "b") multiplier = 1_000_000_000;
+          raw = raw.replace(/([kmb])\s*$/i, "");
+        }
+
+        raw = raw.replace(/[^\d,.\-]/g, "");
+
+        const commaCount = (raw.match(/,/g) || []).length;
+        const dotCount = (raw.match(/\./g) || []).length;
+
+        if (commaCount > 0 && dotCount > 0) {
+          if (raw.lastIndexOf(",") > raw.lastIndexOf(".")) {
+            raw = raw.replace(/\./g, "").replace(",", ".");
+          } else {
+            raw = raw.replace(/,/g, "");
+          }
+        } else if (commaCount > 0) {
+          if (commaCount > 1) {
+            raw = raw.replace(/,/g, "");
+          } else {
+            const [left, right] = raw.split(",");
+            raw = right && right.length <= 2 ? `${left}.${right}` : `${left}${right || ""}`;
+          }
+        } else if (dotCount > 0) {
+          if (dotCount > 1) {
+            raw = raw.replace(/\./g, "");
+          } else {
+            const [left, right] = raw.split(".");
+            raw = right && right.length === 3 ? `${left}${right}` : raw;
+          }
+        }
+
+        const n = Number(raw);
+        return Number.isFinite(n) ? n * multiplier : 0;
       }
 
       function formatNumber(v) {
-        return new Intl.NumberFormat("en-US").format(v);
+        return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(v);
       }
 
       function formatCurrency(v) {
@@ -229,6 +276,7 @@
       }
 
       function cleanCell(value) {
+        if (value instanceof Date) return value;
         return fixMojibake(value);
       }
 
@@ -238,7 +286,8 @@
 
         if (typeof value === "number" && Number.isFinite(value) && value > 20000 && value < 100000) {
           const utcDays = Math.floor(value - 25569);
-          return new Date(utcDays * 86400 * 1000);
+          const utcValue = utcDays * 86400 * 1000;
+          return new Date(utcValue);
         }
 
         const raw = String(value).trim();
@@ -247,11 +296,19 @@
 
         const mdy = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
         if (mdy) {
+          const mm = Number(mdy[1]);
+          const dd = Number(mdy[2]);
           const yyyy = mdy[3].length === 2 ? Number(`20${mdy[3]}`) : Number(mdy[3]);
-          const d = new Date(yyyy, Number(mdy[1]) - 1, Number(mdy[2]));
+          const d = new Date(yyyy, mm - 1, dd);
           if (!Number.isNaN(d.getTime())) return d;
         }
         return null;
+      }
+
+      function formatDateMDY(value) {
+        const d = parseDate(value);
+        if (!d) return String(value || "");
+        return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
       }
 
       function getColumnValue(row, aliases) {
@@ -264,10 +321,29 @@
 
       function getMappedRow(row) {
         return {
-          date: cleanCell(getColumnValue(row, ["date", "publish date", "publication date"])),
+          date: getColumnValue(row, ["date", "publish date", "publication date"]),
           publication: cleanCell(getColumnValue(row, ["station/publication", "station / publication", "publication", "station", "outlet"])),
           tier: cleanCell(getColumnValue(row, ["tier", "media tier"])),
-          audience: cleanCell(getColumnValue(row, ["audience/uvpm", "audience / uvpm", "audience", "uvpm", "reach", "impressions"])),
+          audience: cleanCell(getColumnValue(row, [
+            "audience/uvpm",
+            "audience / uvpm",
+            "audience/umpv",
+            "audience / umpv",
+            "audience/umvp",
+            "audience / umvp",
+            "audience uvpm",
+            "audience umpv",
+            "audience umvp",
+            "audienceuvpm",
+            "audienceumpv",
+            "audienceumvp",
+            "audience",
+            "uvpm",
+            "umpv",
+            "umvp",
+            "reach",
+            "impressions",
+          ])),
           title: cleanCell(getColumnValue(row, ["title", "headline"])),
           link: cleanCell(getColumnValue(row, ["link", "url"])),
           mediaType: cleanCell(getColumnValue(row, ["media type", "type of media", "type pf media", "media"])),
@@ -282,7 +358,12 @@
         const hasMediaType = ["media type", "type of media", "type pf media", "media"].some((h) => headers.includes(h));
         if (!hasMediaType) throw new Error("Missing required header: Media Type.");
 
-        const hasAudience = ["audience/uvpm", "audience / uvpm", "audience", "uvpm", "reach", "impressions"].some((h) => headers.includes(h));
+        const hasAudience = [
+          "audience/uvpm","audience / uvpm","audience/umpv","audience / umpv","audience/umvp","audience / umvp",
+          "audience uvpm","audience umpv","audience umvp","audienceuvpm","audienceumpv","audienceumvp",
+          "audience","uvpm","umpv","umvp","reach","impressions"
+        ].some((h) => headers.includes(h));
+
         const hasPublicity = ["publicity value", "pubicity value", "publicity", "ave"].some((h) => headers.includes(h));
 
         if (!hasAudience || !hasPublicity) {
@@ -296,7 +377,7 @@
         const workbook = XLSX.read(buffer, {
           type: "array",
           cellDates: true,
-          raw: false,
+          raw: true,
         });
 
         const firstSheet = workbook.SheetNames[0];
@@ -343,12 +424,26 @@
         return Object.values(grouped).sort((a, b) => b.mentions - a.mentions);
       }
 
-      function createOrUpdateChart(existing, id, labels, data, colors) {
+      function createOrUpdateChart(existing, id, labels, data, colors, fallbackLabel = "No data") {
         if (existing) existing.destroy();
+
+        const hasData = Array.isArray(data) && data.some((v) => Number(v) > 0);
+        const finalLabels = hasData && labels.length ? labels : [fallbackLabel];
+        const finalData = hasData && data.length ? data : [1];
+        const finalColors = hasData && colors.length ? colors : ["#E5E7EB"];
+
         return new Chart(document.getElementById(id), {
           type: "doughnut",
-          data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: "#fff", borderWidth: 2, hoverOffset: 6 }] },
-          options: { responsive: true, maintainAspectRatio: false, cutout: "62%", plugins: { legend: { display: false } } }
+          data: {
+            labels: finalLabels,
+            datasets: [{ data: finalData, backgroundColor: finalColors, borderColor: "#fff", borderWidth: 2, hoverOffset: 6 }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "62%",
+            plugins: { legend: { display: false } },
+          },
         });
       }
 
@@ -382,7 +477,7 @@
           const rc = i % 2 === 0 ? "bg-white" : "bg-[#FCFCFD]";
           return `
             <tr class="${rc}">
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(x.date)}</td>
+              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(formatDateMDY(x.date))}</td>
               <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 font-medium">${escapeHtml(x.publication)}</td>
               <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(normalizeTier(x.tier))}</td>
               <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${formatNumber(toNumber(x.audience))}</td>
@@ -438,9 +533,9 @@
         document.getElementById("rowsLoaded").textContent = formatNumber(rows.length);
         document.getElementById("fileNameLabel").textContent = sourceLabel;
 
-        mentionsChart = createOrUpdateChart(mentionsChart, "mentionsChart", labels, mentions, colors);
-        audienceChart = createOrUpdateChart(audienceChart, "audienceChart", labels, audience, colors);
-        publicityChart = createOrUpdateChart(publicityChart, "publicityChart", labels, publicity, colors);
+        mentionsChart = createOrUpdateChart(mentionsChart, "mentionsChart", labels, mentions, colors, "No mentions");
+        audienceChart = createOrUpdateChart(audienceChart, "audienceChart", labels, audience, colors, "No audience");
+        publicityChart = createOrUpdateChart(publicityChart, "publicityChart", labels, publicity, colors, "No publicity");
 
         renderTable(rows);
       }
@@ -511,7 +606,7 @@
           const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
           const title = document.getElementById("clientTitle").value || "JOTO QBR";
-          const today = new Date().toLocaleDateString("en-US");
+          const today = formatDateMDY(new Date());
 
           doc.setFontSize(16);
           doc.text(`${cleanCell(title)} - Placement Report`, 10, 12);
@@ -538,7 +633,7 @@
           doc.addImage(pCanvas.toDataURL("image/png", 1), "PNG", 20 + chartW * 2, chartY, chartW, chartH);
 
           const body = rows.map((r) => [
-            cleanCell(r.date || ""),
+            cleanCell(formatDateMDY(r.date)),
             cleanCell(r.publication || ""),
             cleanCell(normalizeTier(r.tier || "")),
             cleanCell(formatNumber(toNumber(r.audience))),
