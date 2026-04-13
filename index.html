@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
       body {
@@ -43,7 +44,7 @@
               class="text-2xl md:text-3xl font-bold tracking-tight bg-transparent border-b-2 border-transparent focus:border-[#D8232A] outline-none w-full"
             />
             <p class="text-sm text-neutral-500 md:text-base">
-              Upload CSV and generate mentions, audience, publicity, and placement list.
+              Upload CSV/XLSX and generate mentions, audience, publicity, and placement list.
             </p>
           </div>
         </div>
@@ -53,9 +54,9 @@
             for="csvFile"
             class="cursor-pointer rounded-2xl bg-[#D8232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#B61E24]"
           >
-            Upload CSV
+            Upload File
           </label>
-          <input id="csvFile" type="file" accept=".csv,text/csv" class="hidden" />
+          <input id="csvFile" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" />
 
           <button
             id="exportPdfBtn"
@@ -193,11 +194,7 @@
       }
 
       function formatCurrency(v) {
-        return new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 0,
-        }).format(v);
+        return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v);
       }
 
       function escapeHtml(v) {
@@ -278,76 +275,8 @@
         };
       }
 
-      function getMediaColor(mediaType) {
-        const n = normalizeKey(mediaType);
-        if (n.includes("tv")) return COLOR_MAP.tv;
-        if (n.includes("online") || n.includes("print")) return COLOR_MAP.onlinePrint;
-        if (n.includes("radio")) return COLOR_MAP.radio;
-        if (n.includes("podcast")) return COLOR_MAP.podcasts;
-        if (n.includes("youtube")) return COLOR_MAP.youtube;
-        return COLOR_MAP.other;
-      }
-
-      function csvToObjects(text) {
-        const cleaned = String(text || "").replace(/^\uFEFF/, "").trim();
-        if (!cleaned) throw new Error("CSV is empty.");
-
-        const firstLine = cleaned.split(/\r\n|\n|\r/)[0] || "";
-        const commaCount = (firstLine.match(/,/g) || []).length;
-        const semicolonCount = (firstLine.match(/;/g) || []).length;
-        const tabCount = (firstLine.match(/\t/g) || []).length;
-
-        let delimiter = ",";
-        if (semicolonCount > commaCount && semicolonCount >= tabCount) delimiter = ";";
-        if (tabCount > commaCount && tabCount > semicolonCount) delimiter = "\t";
-
-        const rows = [];
-        let row = [], current = "", inQuotes = false;
-
-        for (let i = 0; i < cleaned.length; i++) {
-          const c = cleaned[i];
-          const n = cleaned[i + 1];
-
-          if (c === '"') {
-            if (inQuotes && n === '"') {
-              current += '"';
-              i++;
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (c === delimiter && !inQuotes) {
-            row.push(cleanCell(current.trim()));
-            current = "";
-          } else if ((c === "\n" || c === "\r") && !inQuotes) {
-            if (c === "\r" && n === "\n") i++;
-            row.push(cleanCell(current.trim()));
-            current = "";
-            if (row.some((x) => x !== "")) rows.push(row);
-            row = [];
-          } else {
-            current += c;
-          }
-        }
-
-        if (current.length || row.length) {
-          row.push(cleanCell(current.trim()));
-          if (row.some((x) => x !== "")) rows.push(row);
-        }
-
-        if (rows.length < 2) {
-          throw new Error("CSV must contain a header row and at least one data row.");
-        }
-
-        const headers = rows[0].map((h) => cleanCell(h));
-        return rows.slice(1).map((values) => {
-          const obj = {};
-          headers.forEach((h, i) => { obj[h] = cleanCell(values[i] ?? ""); });
-          return obj;
-        });
-      }
-
       function validateRows(rows) {
-        if (!rows.length) throw new Error("CSV has no data rows.");
+        if (!rows.length) throw new Error("File has no data rows.");
 
         const headers = Object.keys(rows[0]).map(normalizeKey);
         const hasMediaType = ["media type", "type of media", "type pf media", "media"].some((h) => headers.includes(h));
@@ -359,6 +288,42 @@
         if (!hasAudience || !hasPublicity) {
           setMessage("Some optional headers are missing (Audience/Publicity). Missing values will be treated as 0.");
         }
+      }
+
+      async function parseUploadedFile(file) {
+        const buffer = await file.arrayBuffer();
+
+        const workbook = XLSX.read(buffer, {
+          type: "array",
+          cellDates: true,
+          raw: false,
+        });
+
+        const firstSheet = workbook.SheetNames[0];
+        if (!firstSheet) throw new Error("File has no sheets/data.");
+
+        const worksheet = workbook.Sheets[firstSheet];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+        if (!rows.length) throw new Error("CSV/XLSX has no data rows.");
+
+        return rows.map((row) => {
+          const cleaned = {};
+          Object.entries(row).forEach(([k, v]) => {
+            cleaned[cleanCell(k)] = cleanCell(v);
+          });
+          return cleaned;
+        });
+      }
+
+      function getMediaColor(mediaType) {
+        const n = normalizeKey(mediaType);
+        if (n.includes("tv")) return COLOR_MAP.tv;
+        if (n.includes("online") || n.includes("print")) return COLOR_MAP.onlinePrint;
+        if (n.includes("radio")) return COLOR_MAP.radio;
+        if (n.includes("podcast")) return COLOR_MAP.podcasts;
+        if (n.includes("youtube")) return COLOR_MAP.youtube;
+        return COLOR_MAP.other;
       }
 
       function aggregateByMedia(rows) {
@@ -400,16 +365,7 @@
       }
 
       function updateSortButtons() {
-        const labels = {
-          date: "Date",
-          publication: "Station / Publication",
-          tier: "Tier",
-          audience: "Audience / UVPM",
-          title: "Title",
-          link: "Link",
-          mediaType: "Media Type",
-          publicity: "Publicity Value",
-        };
+        const labels = { date: "Date", publication: "Station / Publication", tier: "Tier", audience: "Audience / UVPM", title: "Title", link: "Link", mediaType: "Media Type", publicity: "Publicity Value" };
         document.querySelectorAll(".sort-btn").forEach((btn) => {
           const key = btn.dataset.sort;
           btn.textContent = labels[key] + (currentSort.key === key ? (currentSort.direction === "asc" ? " ↑" : " ↓") : "");
@@ -500,43 +456,20 @@
         box.className = isError ? "text-sm text-red-600" : "text-sm text-neutral-600";
       }
 
-      function processCSVText(text, sourceLabel) {
-        try {
-          const rows = csvToObjects(text);
-          validateRows(rows);
-          currentRows = rows;
-          currentSourceLabel = sourceLabel;
-          populateTierFilter(rows);
-          refreshDashboardView();
-          setMessage("CSV loaded successfully.");
-        } catch (err) {
-          setMessage(err.message || "Could not read CSV.", true);
-        }
-      }
-
-      async function readCsvText(file) {
-        const buf = await file.arrayBuffer();
-
-        try {
-          return new TextDecoder("utf-8", { fatal: true }).decode(buf);
-        } catch {}
-
-        try {
-          return new TextDecoder("utf-16le", { fatal: true }).decode(buf);
-        } catch {}
-
-        return new TextDecoder("windows-1252").decode(buf);
-      }
-
       document.getElementById("csvFile").addEventListener("change", async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
         try {
-          const text = await readCsvText(file);
-          processCSVText(text, file.name);
-        } catch {
-          setMessage("Could not read CSV encoding.", true);
+          const rows = await parseUploadedFile(file);
+          validateRows(rows);
+          currentRows = rows;
+          currentSourceLabel = file.name;
+          populateTierFilter(rows);
+          refreshDashboardView();
+          setMessage("File loaded successfully.");
+        } catch (err) {
+          setMessage(err.message || "Could not read file.", true);
         }
       });
 
