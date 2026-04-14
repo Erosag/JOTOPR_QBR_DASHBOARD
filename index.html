@@ -551,6 +551,14 @@
         box.className = isError ? "text-sm text-red-600" : "text-sm text-neutral-600";
       }
 
+      function toPdfText(v) {
+        return String(v ?? "")
+          .replace(/[\u{10000}-\u{10FFFF}]/gu, "") // remove unsupported surrogate pairs (emoji, etc.)
+          .replace(/[\r\n\t]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
       document.getElementById("csvFile").addEventListener("change", async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -603,13 +611,17 @@
           button.disabled = true;
 
           const { jsPDF } = window.jspdf;
+          if (!jsPDF) throw new Error("jsPDF library is not loaded.");
           const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+          if (typeof doc.autoTable !== "function") {
+            throw new Error("PDF table plugin did not load. Please refresh and try again.");
+          }
 
           const title = document.getElementById("clientTitle").value || "JOTO QBR";
           const today = formatDateMDY(new Date());
 
           doc.setFontSize(16);
-          doc.text(`${cleanCell(title)} - Placement Report`, 10, 12);
+          doc.text(`${toPdfText(cleanCell(title))} - Placement Report`, 10, 12);
           doc.setFontSize(10);
           doc.text(`Rows: ${rows.length}`, 10, 18);
           doc.text(`Generated: ${today}`, 10, 23);
@@ -622,25 +634,34 @@
           const mCanvas = document.getElementById("mentionsChart");
           const aCanvas = document.getElementById("audienceChart");
           const pCanvas = document.getElementById("publicityChart");
+          const safeAddChart = (canvas, x, y, w, h) => {
+            try {
+              if (!canvas) return;
+              const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+              doc.addImage(dataUrl, "JPEG", x, y, w, h);
+            } catch {
+              // Keep PDF export working even if chart image encoding fails.
+            }
+          };
 
           doc.text("Mentions", 10, chartY - 2);
-          doc.addImage(mCanvas.toDataURL("image/png", 1), "PNG", 10, chartY, chartW, chartH);
+          safeAddChart(mCanvas, 10, chartY, chartW, chartH);
 
           doc.text("Audience", 15 + chartW, chartY - 2);
-          doc.addImage(aCanvas.toDataURL("image/png", 1), "PNG", 15 + chartW, chartY, chartW, chartH);
+          safeAddChart(aCanvas, 15 + chartW, chartY, chartW, chartH);
 
           doc.text("Publicity", 20 + chartW * 2, chartY - 2);
-          doc.addImage(pCanvas.toDataURL("image/png", 1), "PNG", 20 + chartW * 2, chartY, chartW, chartH);
+          safeAddChart(pCanvas, 20 + chartW * 2, chartY, chartW, chartH);
 
           const body = rows.map((r) => [
-            cleanCell(formatDateMDY(r.date)),
-            cleanCell(r.publication || ""),
-            cleanCell(normalizeTier(r.tier || "")),
-            cleanCell(formatNumber(toNumber(r.audience))),
-            cleanCell(r.title || ""),
-            cleanCell(safeUrl(r.link) || ""),
-            cleanCell(r.mediaType || "Other"),
-            cleanCell(formatCurrency(toNumber(r.publicity))),
+            toPdfText(cleanCell(formatDateMDY(r.date))),
+            toPdfText(cleanCell(r.publication || "")),
+            toPdfText(cleanCell(normalizeTier(r.tier || ""))),
+            toPdfText(cleanCell(formatNumber(toNumber(r.audience)))),
+            toPdfText(cleanCell(r.title || "")),
+            toPdfText(cleanCell(safeUrl(r.link) || "")),
+            toPdfText(cleanCell(r.mediaType || "Other")),
+            toPdfText(cleanCell(formatCurrency(toNumber(r.publicity)))),
           ]);
 
           doc.autoTable({
@@ -678,7 +699,8 @@
           doc.save("joto-qbr-report.pdf");
           setMessage("PDF exported successfully.");
         } catch (error) {
-          setMessage("Could not export PDF.", true);
+          const detail = error?.message ? ` ${error.message}` : "";
+          setMessage(`Could not export PDF.${detail}`, true);
         } finally {
           button.textContent = originalText;
           button.disabled = false;
