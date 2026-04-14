@@ -322,7 +322,7 @@
       function getMappedRow(row) {
         return {
           date: getColumnValue(row, ["date", "publish date", "publication date"]),
-          publication: cleanCell(getColumnValue(row, ["station/publication", "station / publication", "publication", "station", "outlet"])),
+          publication: cleanCell(getColumnValue(row, ["station/publication", "station / publication", "publication", "station", "outlet", "outlet name", "publication name"])),
           tier: cleanCell(getColumnValue(row, ["tier", "media tier"])),
           audience: cleanCell(getColumnValue(row, [
             "audience/uvpm",
@@ -500,8 +500,8 @@
         select.value = tiers.includes(current) ? current : "";
       }
 
-      function applyFilters(rows) {
-        const tierValue = document.getElementById("tierFilter").value;
+      function applyFilters(rows, options = {}) {
+        const tierValue = options.ignoreTier ? "" : document.getElementById("tierFilter").value;
         const from = document.getElementById("dateFromFilter").value;
         const to = document.getElementById("dateToFilter").value;
         const fromDate = from ? new Date(`${from}T00:00:00`) : null;
@@ -559,6 +559,40 @@
           .trim();
       }
 
+      function makePdfDoughnutImage(labels, values, colors) {
+        const safeLabels = labels.length ? labels : ["No data"];
+        const safeValues = values.length ? values : [1];
+        const safeColors = colors.length ? colors : ["#D1D5DB"];
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 800;
+        canvas.height = 500;
+        const ctx = canvas.getContext("2d");
+
+        // Paint white background to avoid dark/black chart backgrounds in PDF.
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const chart = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: safeLabels,
+            datasets: [{ data: safeValues, backgroundColor: safeColors, borderColor: "#fff", borderWidth: 2, hoverOffset: 6 }],
+          },
+          options: {
+            responsive: false,
+            animation: false,
+            maintainAspectRatio: false,
+            cutout: "62%",
+            plugins: { legend: { display: false } },
+          },
+        });
+
+        const dataUrl = canvas.toDataURL("image/png", 1);
+        chart.destroy();
+        return dataUrl;
+      }
+
       document.getElementById("csvFile").addEventListener("change", async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -601,11 +635,22 @@
         const originalText = button.textContent;
 
         try {
-          const rows = sortRows(applyFilters(currentRows)).map(getMappedRow);
-          if (!rows.length) {
+          const allTierRows = applyFilters(currentRows, { ignoreTier: true });
+          const listRows = sortRows(applyFilters(currentRows)).map(getMappedRow);
+          if (!allTierRows.length) {
             setMessage("No rows to export.", true);
             return;
           }
+
+          const groupedAll = aggregateByMedia(allTierRows);
+          const chartLabels = groupedAll.map((x) => x.mediaType);
+          const chartColors = groupedAll.map((x) => getMediaColor(x.mediaType));
+          const mentionsValues = groupedAll.map((x) => x.mentions);
+          const audienceValues = groupedAll.map((x) => x.audience);
+          const publicityValues = groupedAll.map((x) => x.publicity);
+          const totalMentions = mentionsValues.reduce((a, b) => a + b, 0);
+          const totalAudience = audienceValues.reduce((a, b) => a + b, 0);
+          const totalPublicity = publicityValues.reduce((a, b) => a + b, 0);
 
           button.textContent = "Exporting...";
           button.disabled = true;
@@ -623,37 +668,30 @@
           doc.setFontSize(16);
           doc.text(`${toPdfText(cleanCell(title))} - Placement Report`, 10, 12);
           doc.setFontSize(10);
-          doc.text(`Rows: ${rows.length}`, 10, 18);
+          doc.text(`Rows (Placement List): ${listRows.length}`, 10, 18);
+          doc.text(`Rows (All Tiers Charts): ${allTierRows.length}`, 70, 18);
           doc.text(`Generated: ${today}`, 10, 23);
+          doc.text("Charts shown below are ALL TIERS totals.", 70, 23);
 
           const pageW = doc.internal.pageSize.getWidth();
           const chartY = 28;
           const chartW = (pageW - 40) / 3;
           const chartH = 58;
 
-          const mCanvas = document.getElementById("mentionsChart");
-          const aCanvas = document.getElementById("audienceChart");
-          const pCanvas = document.getElementById("publicityChart");
-          const safeAddChart = (canvas, x, y, w, h) => {
-            try {
-              if (!canvas) return;
-              const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-              doc.addImage(dataUrl, "JPEG", x, y, w, h);
-            } catch {
-              // Keep PDF export working even if chart image encoding fails.
-            }
-          };
+          const mImg = makePdfDoughnutImage(chartLabels, mentionsValues, chartColors);
+          const aImg = makePdfDoughnutImage(chartLabels, audienceValues, chartColors);
+          const pImg = makePdfDoughnutImage(chartLabels, publicityValues, chartColors);
 
-          doc.text("Mentions", 10, chartY - 2);
-          safeAddChart(mCanvas, 10, chartY, chartW, chartH);
+          doc.text(`Mentions (All Tiers): ${formatNumber(totalMentions)}`, 10, chartY - 2);
+          doc.addImage(mImg, "PNG", 10, chartY, chartW, chartH);
 
-          doc.text("Audience", 15 + chartW, chartY - 2);
-          safeAddChart(aCanvas, 15 + chartW, chartY, chartW, chartH);
+          doc.text(`Audience (All Tiers): ${formatNumber(totalAudience)}`, 15 + chartW, chartY - 2);
+          doc.addImage(aImg, "PNG", 15 + chartW, chartY, chartW, chartH);
 
-          doc.text("Publicity", 20 + chartW * 2, chartY - 2);
-          safeAddChart(pCanvas, 20 + chartW * 2, chartY, chartW, chartH);
+          doc.text(`Publicity (All Tiers): ${formatCurrency(totalPublicity)}`, 20 + chartW * 2, chartY - 2);
+          doc.addImage(pImg, "PNG", 20 + chartW * 2, chartY, chartW, chartH);
 
-          const body = rows.map((r) => [
+          const body = listRows.map((r) => [
             toPdfText(cleanCell(formatDateMDY(r.date))),
             toPdfText(cleanCell(r.publication || "")),
             toPdfText(cleanCell(normalizeTier(r.tier || ""))),
@@ -663,6 +701,10 @@
             toPdfText(cleanCell(r.mediaType || "Other")),
             toPdfText(cleanCell(formatCurrency(toNumber(r.publicity)))),
           ]);
+
+          if (!body.length) {
+            body.push(["", "No rows match current placement list filters", "", "", "", "", "", ""]);
+          }
 
           doc.autoTable({
             startY: 90,
