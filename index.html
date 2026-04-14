@@ -559,7 +559,7 @@
           .trim();
       }
 
-      function makePdfDoughnutImage(labels, values, colors) {
+      function makePdfDoughnutImage(labels, values, colors, centerValue, centerLabel) {
         const safeLabels = labels.length ? labels : ["No data"];
         const safeValues = values.length ? values : [1];
         const safeColors = colors.length ? colors : ["#D1D5DB"];
@@ -587,6 +587,18 @@
             plugins: { legend: { display: false } },
           },
         });
+
+        // Draw center text to match dashboard style.
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#0f172a";
+        ctx.font = "700 56px Inter, Arial, sans-serif";
+        ctx.fillText(String(centerValue || ""), canvas.width / 2, canvas.height / 2 - 16);
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "500 42px Inter, Arial, sans-serif";
+        ctx.fillText(String(centerLabel || ""), canvas.width / 2, canvas.height / 2 + 54);
+        ctx.restore();
 
         const dataUrl = canvas.toDataURL("image/png", 1);
         chart.destroy();
@@ -678,17 +690,17 @@
           const chartW = (pageW - 40) / 3;
           const chartH = 58;
 
-          const mImg = makePdfDoughnutImage(chartLabels, mentionsValues, chartColors);
-          const aImg = makePdfDoughnutImage(chartLabels, audienceValues, chartColors);
-          const pImg = makePdfDoughnutImage(chartLabels, publicityValues, chartColors);
+          const mImg = makePdfDoughnutImage(chartLabels, mentionsValues, chartColors, formatNumber(totalMentions), "Mentions");
+          const aImg = makePdfDoughnutImage(chartLabels, audienceValues, chartColors, formatNumber(totalAudience), "Audience");
+          const pImg = makePdfDoughnutImage(chartLabels, publicityValues, chartColors, formatCurrency(totalPublicity), "Publicity");
 
-          doc.text(`Mentions (All Tiers): ${formatNumber(totalMentions)}`, 10, chartY - 2);
+          doc.text("Mentions by Media Type (All Tiers)", 10, chartY - 2);
           doc.addImage(mImg, "PNG", 10, chartY, chartW, chartH);
 
-          doc.text(`Audience (All Tiers): ${formatNumber(totalAudience)}`, 15 + chartW, chartY - 2);
+          doc.text("Audience by Media Type (All Tiers)", 15 + chartW, chartY - 2);
           doc.addImage(aImg, "PNG", 15 + chartW, chartY, chartW, chartH);
 
-          doc.text(`Publicity (All Tiers): ${formatCurrency(totalPublicity)}`, 20 + chartW * 2, chartY - 2);
+          doc.text("Publicity by Media Type (All Tiers)", 20 + chartW * 2, chartY - 2);
           doc.addImage(pImg, "PNG", 20 + chartW * 2, chartY, chartW, chartH);
 
           const body = listRows.map((r) => [
