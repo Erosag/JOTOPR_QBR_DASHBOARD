@@ -1070,7 +1070,9 @@ async function exportPdf() {
       },
       didDrawCell(data) {
         if (data.section === "body" && data.column.index === 3) {
-          const url = body[data.row.index][3];
+          const rowIndex = data?.row?.index;
+          const rowValues = Number.isInteger(rowIndex) ? body[rowIndex] : null;
+          const url = Array.isArray(rowValues) ? rowValues[3] : "";
           if (url) {
             doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
           }
