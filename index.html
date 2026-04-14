@@ -1,689 +1,162 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JOTO QBR Dashboard</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-    <style>
-      body {
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      }
-      .table-scroll::-webkit-scrollbar {
-        height: 10px;
-      }
-      .table-scroll::-webkit-scrollbar-track {
-        background: #f1f3f5;
-        border-radius: 999px;
-      }
-      .table-scroll::-webkit-scrollbar-thumb {
-        background: #d0d5dd;
-        border-radius: 999px;
-      }
-      .sort-btn {
-        width: 100%;
-      }
-    </style>
+    <title>Media Placement Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
-
-  <body class="min-h-screen bg-[#F7F7F8] text-neutral-900">
-    <header class="bg-white border-b border-neutral-200 px-6 py-4">
-      <div class="mx-auto max-w-7xl flex items-center justify-between flex-wrap gap-4">
-        <div class="flex items-center gap-4 min-w-0">
-          <div class="h-12 w-12 rounded-xl bg-[#D8232A] text-white font-bold grid place-items-center">J</div>
-          <div class="min-w-0">
-            <input
-              id="clientTitle"
-              value="JOTO QBR"
-              class="text-2xl md:text-3xl font-bold tracking-tight bg-transparent border-b-2 border-transparent focus:border-[#D8232A] outline-none w-full"
-            />
-            <p class="text-sm text-neutral-500 md:text-base">
-              Upload CSV/XLSX and generate mentions, audience, publicity, and placement list.
-            </p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3 flex-wrap">
-          <label
-            for="csvFile"
-            class="cursor-pointer rounded-2xl bg-[#D8232A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#B61E24]"
-          >
-            Upload File
-          </label>
-          <input id="csvFile" type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden" />
-
-          <button
-            id="exportPdfBtn"
-            class="rounded-2xl border border-neutral-300 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-50"
-          >
-            Export PDF
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <main id="dashboardContent" class="mx-auto max-w-7xl px-6 py-8 space-y-8">
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="rounded-2xl bg-[#D8232A] text-white p-5 shadow-sm min-h-[120px] flex flex-col justify-between">
-          <div class="text-sm text-white/80">Data source</div>
-          <div id="fileNameLabel" class="text-lg font-semibold truncate">No file uploaded</div>
-        </div>
-
-        <div class="rounded-2xl bg-white p-5 shadow-sm border border-neutral-200 min-h-[120px] flex flex-col justify-between">
-          <div class="text-sm text-neutral-500">Rows loaded</div>
-          <div id="rowsLoaded" class="text-3xl font-bold">0</div>
-        </div>
-
-        <div class="rounded-2xl bg-white p-5 shadow-sm border border-neutral-200 min-h-[120px]">
-          <div class="text-sm text-neutral-500 mb-2">Filters</div>
-          <div class="flex flex-wrap gap-2">
-            <select id="tierFilter" class="rounded-xl border border-neutral-300 px-3 py-2 text-sm">
-              <option value="">All tiers</option>
-            </select>
-            <input id="dateFromFilter" type="date" class="rounded-xl border border-neutral-300 px-3 py-2 text-sm" />
-            <input id="dateToFilter" type="date" class="rounded-xl border border-neutral-300 px-3 py-2 text-sm" />
-            <button id="clearFiltersBtn" class="rounded-xl border border-neutral-300 px-3 py-2 text-sm font-semibold hover:bg-neutral-50">
-              Clear
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <div id="messageBox" class="text-sm text-neutral-600"></div>
-      <div class="h-px w-full bg-[#EA3323]"></div>
-
-      <section class="grid gap-5 xl:grid-cols-3">
-        <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
-          <h3 class="text-lg font-semibold text-neutral-900 md:text-xl mb-4">Mentions by Media Type</h3>
-          <div class="relative mx-auto h-[280px] max-w-[280px]">
-            <canvas id="mentionsChart"></canvas>
-            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-              <div id="mentionsTotal" class="text-3xl font-bold tracking-tight text-neutral-950">0</div>
-              <div class="mt-1 text-sm text-neutral-500">Mentions</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
-          <h3 class="text-lg font-semibold text-neutral-900 md:text-xl mb-4">Audience by Media Type</h3>
-          <div class="relative mx-auto h-[280px] max-w-[280px]">
-            <canvas id="audienceChart"></canvas>
-            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-              <div id="audienceTotal" class="text-2xl font-bold tracking-tight text-neutral-950 md:text-3xl">0</div>
-              <div class="mt-1 text-sm text-neutral-500">Audience</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:p-7">
-          <h3 class="text-lg font-semibold text-neutral-900 md:text-xl mb-4">Publicity by Media Type</h3>
-          <div class="relative mx-auto h-[280px] max-w-[280px]">
-            <canvas id="publicityChart"></canvas>
-            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-              <div id="publicityTotal" class="text-2xl font-bold tracking-tight text-neutral-950 md:text-3xl">$0</div>
-              <div class="mt-1 text-sm text-neutral-500">Publicity</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="space-y-5">
+  <body>
+    <div class="bg-orb orb-a"></div>
+    <div class="bg-orb orb-b"></div>
+    <main class="app-shell">
+      <header class="topbar">
         <div>
-          <h3 class="text-2xl font-semibold text-neutral-900">Placement List</h3>
-          <p class="text-neutral-500">Filtered rows used in charts and PDF export.</p>
+          <p class="eyebrow">Media Intelligence Platform</p>
+          <h1>Placement Impact Dashboard</h1>
+          <p class="subtitle">
+            Upload your CSV or Excel file to see mentions, audience, and publicity by media type.
+          </p>
+        </div>
+        <div class="topbar-actions">
+          <label class="client-name-label" for="clientNameInput">
+            Client Name
+            <input id="clientNameInput" type="text" value="JOTO" placeholder="Client Name" />
+          </label>
+          <button id="shareBtn" class="btn btn-secondary" disabled>Copy Share Link</button>
+        </div>
+      </header>
+
+      <section class="upload-panel">
+        <label for="fileInput" class="file-picker">
+          <input
+            id="fileInput"
+            type="file"
+            accept=".csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          />
+          <span>Choose CSV or Excel File</span>
+        </label>
+        <p class="hint">
+          Required columns (case-insensitive): <strong>Media Type</strong>,
+          <strong>Audience</strong>, and either <strong>Publicity Value</strong> or
+          <strong>Inches + Tier</strong>
+        </p>
+        <p class="hint small">
+          Publicity formula: Inches × Tier multiplier where Tier III = 1000, Tier IV = 1500,
+          Tier V = 3500, Tier VI = 7500.
+        </p>
+        <p id="status" class="status"></p>
+      </section>
+
+      <section id="dashboard" class="dashboard hidden">
+        <article class="table-card">
+          <h2>Filters & Export</h2>
+          <div class="filters-row">
+            <label>
+              Tier
+              <select id="tierFilter">
+                <option value="">All tiers</option>
+                <option value="III">III</option>
+                <option value="IV">IV</option>
+                <option value="V">V</option>
+                <option value="VI">VI</option>
+              </select>
+            </label>
+            <label>
+              Date From
+              <input id="dateFromFilter" type="date" />
+            </label>
+            <label>
+              Date To
+              <input id="dateToFilter" type="date" />
+            </label>
+            <button id="clearDateFiltersBtn" class="btn btn-secondary">Clear Dates</button>
+            <button id="exportPdfBtn" class="btn btn-secondary">Export PDF</button>
+          </div>
+          <p class="hint small">
+            Date filtering uses your CSV/Excel Date column when available.
+          </p>
+        </article>
+
+        <div class="chart-grid">
+          <article class="card">
+            <h2>Mentions by Media Type</h2>
+            <div class="canvas-wrap">
+              <canvas id="mentionsChart"></canvas>
+            </div>
+            <div id="mentionsLegend" class="legend-list"></div>
+          </article>
+          <article class="card">
+            <h2>Audience by Media Type</h2>
+            <div class="canvas-wrap">
+              <canvas id="audienceChart"></canvas>
+            </div>
+            <div id="audienceLegend" class="legend-list"></div>
+          </article>
+          <article class="card">
+            <h2>Publicity by Media Type</h2>
+            <div class="canvas-wrap">
+              <canvas id="publicityChart"></canvas>
+            </div>
+            <div id="publicityLegend" class="legend-list"></div>
+          </article>
+          <article class="card">
+            <h2>Mentions by Tier</h2>
+            <div class="canvas-wrap">
+              <canvas id="tierChart"></canvas>
+            </div>
+          </article>
         </div>
 
-        <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
-          <div class="table-scroll overflow-x-auto">
-            <table class="w-full min-w-[1250px] text-sm">
-              <thead class="border-b border-neutral-200 bg-neutral-50">
+        <article class="table-card">
+          <h2>Breakdown by Media Type</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th><button data-sort="date" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Date</button></th>
-                  <th><button data-sort="publication" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Station / Publication</button></th>
-                  <th><button data-sort="tier" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Tier</button></th>
-                  <th><button data-sort="audience" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Audience / UVPM</button></th>
-                  <th><button data-sort="title" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Title</button></th>
-                  <th><button data-sort="link" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Link</button></th>
-                  <th><button data-sort="mediaType" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Media Type</button></th>
-                  <th><button data-sort="publicity" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Publicity Value</button></th>
+                  <th>Media Type</th>
+                  <th>Mentions</th>
+                  <th>Audience</th>
+                  <th>Publicity</th>
                 </tr>
               </thead>
-              <tbody id="placementsTableBody"></tbody>
+              <tbody id="summaryBody"></tbody>
             </table>
           </div>
-        </div>
+        </article>
+
+        <article class="table-card">
+          <h2>Placement List (Filtered)</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Station / Publication</th>
+                  <th>Title</th>
+                  <th>Link</th>
+                  <th>Media Type</th>
+                  <th>Audience</th>
+                  <th>Publicity</th>
+                </tr>
+              </thead>
+              <tbody id="placementsBody"></tbody>
+            </table>
+          </div>
+        </article>
       </section>
     </main>
 
-    <script>
-      const COLOR_MAP = {
-        tv: "#2E86DE",
-        onlinePrint: "#27AE60",
-        radio: "#F5B041",
-        podcasts: "#8E44AD",
-        youtube: "#5D6D7E",
-        other: "#16A085",
-      };
-
-      let mentionsChart, audienceChart, publicityChart;
-      let currentRows = [];
-      let currentSourceLabel = "No file uploaded";
-      let currentSort = { key: "", direction: "asc" };
-
-      function normalizeKey(v) {
-        return String(v || "")
-          .trim()
-          .toLowerCase()
-          .replace(/^\uFEFF/, "")
-          .replace(/[\r\n]+/g, " ")
-          .replace(/\s+/g, " ");
-      }
-
-      function normalizeTier(v) {
-        return String(v || "").replace(/^tier\s*/i, "").trim().toUpperCase();
-      }
-
-      function toNumber(v) {
-        if (typeof v === "number" && Number.isFinite(v)) return v;
-
-        let raw = String(v ?? "").trim();
-        if (!raw) return 0;
-
-        let multiplier = 1;
-        const suffix = raw.match(/([kmb])\s*$/i);
-        if (suffix) {
-          const s = suffix[1].toLowerCase();
-          if (s === "k") multiplier = 1_000;
-          if (s === "m") multiplier = 1_000_000;
-          if (s === "b") multiplier = 1_000_000_000;
-          raw = raw.replace(/([kmb])\s*$/i, "");
-        }
-
-        raw = raw.replace(/[^\d,.\-]/g, "");
-
-        const commaCount = (raw.match(/,/g) || []).length;
-        const dotCount = (raw.match(/\./g) || []).length;
-
-        if (commaCount > 0 && dotCount > 0) {
-          if (raw.lastIndexOf(",") > raw.lastIndexOf(".")) {
-            raw = raw.replace(/\./g, "").replace(",", ".");
-          } else {
-            raw = raw.replace(/,/g, "");
-          }
-        } else if (commaCount > 0) {
-          if (commaCount > 1) {
-            raw = raw.replace(/,/g, "");
-          } else {
-            const [left, right] = raw.split(",");
-            raw = right && right.length <= 2 ? `${left}.${right}` : `${left}${right || ""}`;
-          }
-        } else if (dotCount > 0) {
-          if (dotCount > 1) {
-            raw = raw.replace(/\./g, "");
-          } else {
-            const [left, right] = raw.split(".");
-            raw = right && right.length === 3 ? `${left}${right}` : raw;
-          }
-        }
-
-        const n = Number(raw);
-        return Number.isFinite(n) ? n * multiplier : 0;
-      }
-
-      function formatNumber(v) {
-        return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(v);
-      }
-
-      function formatCurrency(v) {
-        return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v);
-      }
-
-      function escapeHtml(v) {
-        return String(v ?? "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      }
-
-      function safeUrl(url) {
-        try {
-          const u = new URL(String(url || "").trim());
-          return u.protocol === "http:" || u.protocol === "https:" ? u.href : "";
-        } catch {
-          return "";
-        }
-      }
-
-      function fixMojibake(text) {
-        let s = String(text ?? "");
-        s = s.replace(/\u0000/g, "");
-        s = s.replace(/[\u200B-\u200D\uFEFF]/g, "");
-        s = s.replace(/Ã¡/g, "á").replace(/Ã©/g, "é").replace(/Ã­/g, "í").replace(/Ã³/g, "ó").replace(/Ãº/g, "ú");
-        s = s.replace(/Ã±/g, "ñ").replace(/Ã"/g, "Ó").replace(/Ã/g, "Á");
-        s = s.replace(/â€™/g, "'").replace(/â€œ|â€/g, '"').replace(/â€“/g, "-").replace(/Â/g, "");
-        s = s.replace(/ÿ/g, " ");
-        s = s.replace(/\b(?:[A-Za-z]\s){3,}[A-Za-z]\b/g, (m) => m.replace(/\s+/g, ""));
-        s = s.replace(/\s+/g, " ").trim();
-        return s;
-      }
-
-      function cleanCell(value) {
-        if (value instanceof Date) return value;
-        return fixMojibake(value);
-      }
-
-      function parseDate(value) {
-        if (!value) return null;
-        if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
-
-        if (typeof value === "number" && Number.isFinite(value) && value > 20000 && value < 100000) {
-          const utcDays = Math.floor(value - 25569);
-          const utcValue = utcDays * 86400 * 1000;
-          return new Date(utcValue);
-        }
-
-        const raw = String(value).trim();
-        const direct = new Date(raw);
-        if (!Number.isNaN(direct.getTime())) return direct;
-
-        const mdy = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
-        if (mdy) {
-          const mm = Number(mdy[1]);
-          const dd = Number(mdy[2]);
-          const yyyy = mdy[3].length === 2 ? Number(`20${mdy[3]}`) : Number(mdy[3]);
-          const d = new Date(yyyy, mm - 1, dd);
-          if (!Number.isNaN(d.getTime())) return d;
-        }
-        return null;
-      }
-
-      function formatDateMDY(value) {
-        const d = parseDate(value);
-        if (!d) return String(value || "");
-        return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-      }
-
-      function getColumnValue(row, aliases) {
-        const nAliases = aliases.map(normalizeKey);
-        for (const [k, v] of Object.entries(row)) {
-          if (nAliases.includes(normalizeKey(k))) return v;
-        }
-        return "";
-      }
-
-      function getMappedRow(row) {
-        return {
-          date: getColumnValue(row, ["date", "publish date", "publication date"]),
-          publication: cleanCell(getColumnValue(row, ["station/publication", "station / publication", "publication", "station", "outlet"])),
-          tier: cleanCell(getColumnValue(row, ["tier", "media tier"])),
-          audience: cleanCell(getColumnValue(row, [
-            "audience/uvpm",
-            "audience / uvpm",
-            "audience/umpv",
-            "audience / umpv",
-            "audience/umvp",
-            "audience / umvp",
-            "audience uvpm",
-            "audience umpv",
-            "audience umvp",
-            "audienceuvpm",
-            "audienceumpv",
-            "audienceumvp",
-            "audience",
-            "uvpm",
-            "umpv",
-            "umvp",
-            "reach",
-            "impressions",
-          ])),
-          title: cleanCell(getColumnValue(row, ["title", "headline"])),
-          link: cleanCell(getColumnValue(row, ["link", "url"])),
-          mediaType: cleanCell(getColumnValue(row, ["media type", "type of media", "type pf media", "media"])),
-          publicity: cleanCell(getColumnValue(row, ["publicity value", "pubicity value", "publicity", "ave"])),
-        };
-      }
-
-      function validateRows(rows) {
-        if (!rows.length) throw new Error("File has no data rows.");
-
-        const headers = Object.keys(rows[0]).map(normalizeKey);
-        const hasMediaType = ["media type", "type of media", "type pf media", "media"].some((h) => headers.includes(h));
-        if (!hasMediaType) throw new Error("Missing required header: Media Type.");
-
-        const hasAudience = [
-          "audience/uvpm","audience / uvpm","audience/umpv","audience / umpv","audience/umvp","audience / umvp",
-          "audience uvpm","audience umpv","audience umvp","audienceuvpm","audienceumpv","audienceumvp",
-          "audience","uvpm","umpv","umvp","reach","impressions"
-        ].some((h) => headers.includes(h));
-
-        const hasPublicity = ["publicity value", "pubicity value", "publicity", "ave"].some((h) => headers.includes(h));
-
-        if (!hasAudience || !hasPublicity) {
-          setMessage("Some optional headers are missing (Audience/Publicity). Missing values will be treated as 0.");
-        }
-      }
-
-      async function parseUploadedFile(file) {
-        const buffer = await file.arrayBuffer();
-
-        const workbook = XLSX.read(buffer, {
-          type: "array",
-          cellDates: true,
-          raw: true,
-        });
-
-        const firstSheet = workbook.SheetNames[0];
-        if (!firstSheet) throw new Error("File has no sheets/data.");
-
-        const worksheet = workbook.Sheets[firstSheet];
-        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-        if (!rows.length) throw new Error("CSV/XLSX has no data rows.");
-
-        return rows.map((row) => {
-          const cleaned = {};
-          Object.entries(row).forEach(([k, v]) => {
-            cleaned[cleanCell(k)] = cleanCell(v);
-          });
-          return cleaned;
-        });
-      }
-
-      function getMediaColor(mediaType) {
-        const n = normalizeKey(mediaType);
-        if (n.includes("tv")) return COLOR_MAP.tv;
-        if (n.includes("online") || n.includes("print")) return COLOR_MAP.onlinePrint;
-        if (n.includes("radio")) return COLOR_MAP.radio;
-        if (n.includes("podcast")) return COLOR_MAP.podcasts;
-        if (n.includes("youtube")) return COLOR_MAP.youtube;
-        return COLOR_MAP.other;
-      }
-
-      function aggregateByMedia(rows) {
-        const grouped = {};
-        rows.forEach((r) => {
-          const x = getMappedRow(r);
-          if (!x.mediaType && !x.title && !x.link && !x.date) return;
-
-          const mediaType = x.mediaType || "Other";
-          if (!grouped[mediaType]) grouped[mediaType] = { mediaType, mentions: 0, audience: 0, publicity: 0 };
-
-          grouped[mediaType].mentions += 1;
-          grouped[mediaType].audience += toNumber(x.audience);
-          grouped[mediaType].publicity += toNumber(x.publicity);
-        });
-
-        return Object.values(grouped).sort((a, b) => b.mentions - a.mentions);
-      }
-
-      function createOrUpdateChart(existing, id, labels, data, colors, fallbackLabel = "No data") {
-        if (existing) existing.destroy();
-
-        const hasData = Array.isArray(data) && data.some((v) => Number(v) > 0);
-        const finalLabels = hasData && labels.length ? labels : [fallbackLabel];
-        const finalData = hasData && data.length ? data : [1];
-        const finalColors = hasData && colors.length ? colors : ["#E5E7EB"];
-
-        return new Chart(document.getElementById(id), {
-          type: "doughnut",
-          data: {
-            labels: finalLabels,
-            datasets: [{ data: finalData, backgroundColor: finalColors, borderColor: "#fff", borderWidth: 2, hoverOffset: 6 }],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: "62%",
-            plugins: { legend: { display: false } },
-          },
-        });
-      }
-
-      function sortRows(rows) {
-        if (!currentSort.key) return [...rows];
-        const d = currentSort.direction === "asc" ? 1 : -1;
-        return [...rows].sort((a, b) => {
-          const A = getMappedRow(a), B = getMappedRow(b);
-          let vA = A[currentSort.key] || "", vB = B[currentSort.key] || "";
-          if (["audience", "publicity"].includes(currentSort.key)) return (toNumber(vA) - toNumber(vB)) * d;
-          if (currentSort.key === "date") return ((parseDate(vA)?.getTime() || 0) - (parseDate(vB)?.getTime() || 0)) * d;
-          return String(vA).localeCompare(String(vB), undefined, { sensitivity: "base" }) * d;
-        });
-      }
-
-      function updateSortButtons() {
-        const labels = { date: "Date", publication: "Station / Publication", tier: "Tier", audience: "Audience / UVPM", title: "Title", link: "Link", mediaType: "Media Type", publicity: "Publicity Value" };
-        document.querySelectorAll(".sort-btn").forEach((btn) => {
-          const key = btn.dataset.sort;
-          btn.textContent = labels[key] + (currentSort.key === key ? (currentSort.direction === "asc" ? " ↑" : " ↓") : "");
-        });
-      }
-
-      function renderTable(rows) {
-        const tbody = document.getElementById("placementsTableBody");
-        const sortedRows = sortRows(rows);
-
-        tbody.innerHTML = sortedRows.map((row, i) => {
-          const x = getMappedRow(row);
-          const link = safeUrl(x.link);
-          const rc = i % 2 === 0 ? "bg-white" : "bg-[#FCFCFD]";
-          return `
-            <tr class="${rc}">
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(formatDateMDY(x.date))}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 font-medium">${escapeHtml(x.publication)}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(normalizeTier(x.tier))}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${formatNumber(toNumber(x.audience))}</td>
-              <td class="border-b border-neutral-100 px-4 py-3">${escapeHtml(x.title)}</td>
-              <td class="border-b border-neutral-100 px-4 py-3 text-[#D8232A]">${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${escapeHtml(link)}</a>` : ""}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(x.mediaType || "Other")}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${formatCurrency(toNumber(x.publicity))}</td>
-            </tr>
-          `;
-        }).join("");
-
-        updateSortButtons();
-      }
-
-      function populateTierFilter(rows) {
-        const select = document.getElementById("tierFilter");
-        const current = select.value;
-        const tiers = [...new Set(rows.map((r) => normalizeTier(getMappedRow(r).tier)).filter(Boolean))];
-        select.innerHTML = '<option value="">All tiers</option>' + tiers.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
-        select.value = tiers.includes(current) ? current : "";
-      }
-
-      function applyFilters(rows) {
-        const tierValue = document.getElementById("tierFilter").value;
-        const from = document.getElementById("dateFromFilter").value;
-        const to = document.getElementById("dateToFilter").value;
-        const fromDate = from ? new Date(`${from}T00:00:00`) : null;
-        const toDate = to ? new Date(`${to}T23:59:59`) : null;
-
-        return rows.filter((r) => {
-          const x = getMappedRow(r);
-          const tierOk = !tierValue || normalizeTier(x.tier) === tierValue;
-
-          const d = parseDate(x.date);
-          const fromOk = !fromDate || (d && d >= fromDate);
-          const toOk = !toDate || (d && d <= toDate);
-
-          return tierOk && fromOk && toOk;
-        });
-      }
-
-      function updateDashboard(rows, sourceLabel) {
-        const grouped = aggregateByMedia(rows);
-        const labels = grouped.map((x) => x.mediaType);
-        const mentions = grouped.map((x) => x.mentions);
-        const audience = grouped.map((x) => x.audience);
-        const publicity = grouped.map((x) => x.publicity);
-        const colors = grouped.map((x) => getMediaColor(x.mediaType));
-
-        document.getElementById("mentionsTotal").textContent = formatNumber(mentions.reduce((a, b) => a + b, 0));
-        document.getElementById("audienceTotal").textContent = formatNumber(audience.reduce((a, b) => a + b, 0));
-        document.getElementById("publicityTotal").textContent = formatCurrency(publicity.reduce((a, b) => a + b, 0));
-        document.getElementById("rowsLoaded").textContent = formatNumber(rows.length);
-        document.getElementById("fileNameLabel").textContent = sourceLabel;
-
-        mentionsChart = createOrUpdateChart(mentionsChart, "mentionsChart", labels, mentions, colors, "No mentions");
-        audienceChart = createOrUpdateChart(audienceChart, "audienceChart", labels, audience, colors, "No audience");
-        publicityChart = createOrUpdateChart(publicityChart, "publicityChart", labels, publicity, colors, "No publicity");
-
-        renderTable(rows);
-      }
-
-      function refreshDashboardView() {
-        const filtered = applyFilters(currentRows);
-        updateDashboard(filtered, currentSourceLabel);
-      }
-
-      function setMessage(text, isError = false) {
-        const box = document.getElementById("messageBox");
-        box.textContent = text;
-        box.className = isError ? "text-sm text-red-600" : "text-sm text-neutral-600";
-      }
-
-      document.getElementById("csvFile").addEventListener("change", async (event) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        try {
-          const rows = await parseUploadedFile(file);
-          validateRows(rows);
-          currentRows = rows;
-          currentSourceLabel = file.name;
-          populateTierFilter(rows);
-          refreshDashboardView();
-          setMessage("File loaded successfully.");
-        } catch (err) {
-          setMessage(err.message || "Could not read file.", true);
-        }
-      });
-
-      document.getElementById("tierFilter").addEventListener("change", refreshDashboardView);
-      document.getElementById("dateFromFilter").addEventListener("change", refreshDashboardView);
-      document.getElementById("dateToFilter").addEventListener("change", refreshDashboardView);
-
-      document.getElementById("clearFiltersBtn").addEventListener("click", () => {
-        document.getElementById("tierFilter").value = "";
-        document.getElementById("dateFromFilter").value = "";
-        document.getElementById("dateToFilter").value = "";
-        refreshDashboardView();
-      });
-
-      document.querySelectorAll(".sort-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const key = btn.dataset.sort;
-          if (currentSort.key === key) currentSort.direction = currentSort.direction === "asc" ? "desc" : "asc";
-          else { currentSort.key = key; currentSort.direction = "asc"; }
-          renderTable(applyFilters(currentRows));
-        });
-      });
-
-      document.getElementById("exportPdfBtn").addEventListener("click", async () => {
-        const button = document.getElementById("exportPdfBtn");
-        const originalText = button.textContent;
-
-        try {
-          const rows = sortRows(applyFilters(currentRows)).map(getMappedRow);
-          if (!rows.length) {
-            setMessage("No rows to export.", true);
-            return;
-          }
-
-          button.textContent = "Exporting...";
-          button.disabled = true;
-
-          const { jsPDF } = window.jspdf;
-          const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-
-          const title = document.getElementById("clientTitle").value || "JOTO QBR";
-          const today = formatDateMDY(new Date());
-
-          doc.setFontSize(16);
-          doc.text(`${cleanCell(title)} - Placement Report`, 10, 12);
-          doc.setFontSize(10);
-          doc.text(`Rows: ${rows.length}`, 10, 18);
-          doc.text(`Generated: ${today}`, 10, 23);
-
-          const pageW = doc.internal.pageSize.getWidth();
-          const chartY = 28;
-          const chartW = (pageW - 40) / 3;
-          const chartH = 58;
-
-          const mCanvas = document.getElementById("mentionsChart");
-          const aCanvas = document.getElementById("audienceChart");
-          const pCanvas = document.getElementById("publicityChart");
-
-          doc.text("Mentions", 10, chartY - 2);
-          doc.addImage(mCanvas.toDataURL("image/png", 1), "PNG", 10, chartY, chartW, chartH);
-
-          doc.text("Audience", 15 + chartW, chartY - 2);
-          doc.addImage(aCanvas.toDataURL("image/png", 1), "PNG", 15 + chartW, chartY, chartW, chartH);
-
-          doc.text("Publicity", 20 + chartW * 2, chartY - 2);
-          doc.addImage(pCanvas.toDataURL("image/png", 1), "PNG", 20 + chartW * 2, chartY, chartW, chartH);
-
-          const body = rows.map((r) => [
-            cleanCell(formatDateMDY(r.date)),
-            cleanCell(r.publication || ""),
-            cleanCell(normalizeTier(r.tier || "")),
-            cleanCell(formatNumber(toNumber(r.audience))),
-            cleanCell(r.title || ""),
-            cleanCell(safeUrl(r.link) || ""),
-            cleanCell(r.mediaType || "Other"),
-            cleanCell(formatCurrency(toNumber(r.publicity))),
-          ]);
-
-          doc.autoTable({
-            startY: 90,
-            head: [[
-              "Date", "Station / Publication", "Tier", "Audience",
-              "Title", "Link", "Media Type", "Publicity Value"
-            ]],
-            body,
-            styles: { fontSize: 8, cellPadding: 2, overflow: "linebreak", valign: "top" },
-            headStyles: { fillColor: [216, 35, 42], textColor: 255, fontStyle: "bold" },
-            columnStyles: {
-              0: { cellWidth: 20 },
-              1: { cellWidth: 40 },
-              2: { cellWidth: 12 },
-              3: { cellWidth: 22 },
-              4: { cellWidth: 58 },
-              5: { cellWidth: 48, textColor: [30, 64, 175] },
-              6: { cellWidth: 24 },
-              7: { cellWidth: 24 },
-            },
-            didDrawCell: (data) => {
-              if (data.section === "body" && data.column.index === 5) {
-                const url = body[data.row.index][5];
-                if (url) doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
-              }
-            },
-            didDrawPage: (data) => {
-              const pageCount = doc.internal.getNumberOfPages();
-              doc.setFontSize(8);
-              doc.text(`Page ${data.pageNumber} of ${pageCount}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 5);
-            },
-          });
-
-          doc.save("joto-qbr-report.pdf");
-          setMessage("PDF exported successfully.");
-        } catch (error) {
-          setMessage("Could not export PDF.", true);
-        } finally {
-          button.textContent = originalText;
-          button.disabled = false;
-        }
-      });
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="./app.js?v=2026-04-13-7"></script>
   </body>
 </html>
