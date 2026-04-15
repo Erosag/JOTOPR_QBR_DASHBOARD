@@ -311,10 +311,27 @@
         return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
       }
 
+      function canonicalKey(v) {
+        return String(v || "")
+          .toLowerCase()
+          .replace(/^\uFEFF/, "")
+          .replace(/[^a-z0-9]/g, "");
+      }
+
       function getColumnValue(row, aliases) {
         const nAliases = aliases.map(normalizeKey);
+        const cAliases = aliases.map(canonicalKey);
+
+        // 1) exact normalized header match
         for (const [k, v] of Object.entries(row)) {
           if (nAliases.includes(normalizeKey(k))) return v;
+        }
+
+        // 2) canonical contains match (handles "Station / Publication Name", etc.)
+        for (const [k, v] of Object.entries(row)) {
+          const ck = canonicalKey(k);
+          if (!ck) continue;
+          if (cAliases.some((a) => ck === a || ck.includes(a) || a.includes(ck))) return v;
         }
         return "";
       }
