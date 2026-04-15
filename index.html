@@ -582,8 +582,8 @@
         const safeColors = colors.length ? colors : ["#D1D5DB"];
 
         const canvas = document.createElement("canvas");
-        canvas.width = 800;
-        canvas.height = 500;
+        canvas.width = 900;
+        canvas.height = 900;
         const ctx = canvas.getContext("2d");
 
         // Paint white background to avoid dark/black chart backgrounds in PDF.
@@ -610,11 +610,11 @@
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#0f172a";
-        ctx.font = "700 56px Inter, Arial, sans-serif";
-        ctx.fillText(String(centerValue || ""), canvas.width / 2, canvas.height / 2 - 16);
+        ctx.font = "700 90px Inter, Arial, sans-serif";
+        ctx.fillText(String(centerValue || ""), canvas.width / 2, canvas.height / 2 - 28);
         ctx.fillStyle = "#6b7280";
-        ctx.font = "500 42px Inter, Arial, sans-serif";
-        ctx.fillText(String(centerLabel || ""), canvas.width / 2, canvas.height / 2 + 54);
+        ctx.font = "500 58px Inter, Arial, sans-serif";
+        ctx.fillText(String(centerLabel || ""), canvas.width / 2, canvas.height / 2 + 72);
         ctx.restore();
 
         const dataUrl = canvas.toDataURL("image/png", 1);
@@ -694,31 +694,35 @@
           const title = document.getElementById("clientTitle").value || "JOTO QBR";
           const today = formatDateMDY(new Date());
 
-          doc.setFontSize(16);
+          doc.setTextColor(216, 35, 42); // JOTO red
+          doc.setFontSize(18);
           doc.text(`${toPdfText(cleanCell(title))} - Placement Report`, 10, 12);
+          doc.setTextColor(0, 0, 0);
           doc.setFontSize(10);
-          doc.text(`Rows (Placement List): ${listRows.length}`, 10, 18);
-          doc.text(`Rows (All Tiers Charts): ${allTierRows.length}`, 70, 18);
-          doc.text(`Generated: ${today}`, 10, 23);
-          doc.text("Charts shown below are ALL TIERS totals.", 70, 23);
+          doc.text(`Generated: ${today}`, 10, 20);
+          doc.text("Charts shown below are ALL TIERS totals", 10, 25);
 
           const pageW = doc.internal.pageSize.getWidth();
-          const chartY = 28;
-          const chartW = (pageW - 40) / 3;
-          const chartH = 58;
+          const marginX = 10;
+          const gap = 5;
+          const chartTitleY = 37; // two blank lines below detail list
+          const chartY = 40;
+          const chartSize = (pageW - marginX * 2 - gap * 2) / 3;
 
           const mImg = makePdfDoughnutImage(chartLabels, mentionsValues, chartColors, formatNumber(totalMentions), "Mentions");
           const aImg = makePdfDoughnutImage(chartLabels, audienceValues, chartColors, formatNumber(totalAudience), "Audience");
           const pImg = makePdfDoughnutImage(chartLabels, publicityValues, chartColors, formatCurrency(totalPublicity), "Publicity");
 
-          doc.text("Mentions by Media Type (All Tiers)", 10, chartY - 2);
-          doc.addImage(mImg, "PNG", 10, chartY, chartW, chartH);
+          doc.text("Mentions by Media Type (All Tiers)", marginX, chartTitleY);
+          doc.addImage(mImg, "PNG", marginX, chartY, chartSize, chartSize);
 
-          doc.text("Audience by Media Type (All Tiers)", 15 + chartW, chartY - 2);
-          doc.addImage(aImg, "PNG", 15 + chartW, chartY, chartW, chartH);
+          const x2 = marginX + chartSize + gap;
+          doc.text("Audience by Media Type (All Tiers)", x2, chartTitleY);
+          doc.addImage(aImg, "PNG", x2, chartY, chartSize, chartSize);
 
-          doc.text("Publicity by Media Type (All Tiers)", 20 + chartW * 2, chartY - 2);
-          doc.addImage(pImg, "PNG", 20 + chartW * 2, chartY, chartW, chartH);
+          const x3 = marginX + (chartSize + gap) * 2;
+          doc.text("Publicity by Media Type (All Tiers)", x3, chartTitleY);
+          doc.addImage(pImg, "PNG", x3, chartY, chartSize, chartSize);
 
           const body = listRows.map((r) => [
             toPdfText(cleanCell(formatDateMDY(r.date))),
@@ -736,7 +740,7 @@
           }
 
           doc.autoTable({
-            startY: 90,
+            startY: chartY + chartSize + 10,
             head: [[
               "Date", "Station / Publication", "Tier", "Audience",
               "Title", "Link", "Media Type", "Publicity Value"
