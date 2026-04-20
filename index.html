@@ -141,7 +141,17 @@
 
         <div class="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm">
           <div class="table-scroll overflow-x-auto">
-            <table class="w-full min-w-[1250px] text-sm">
+            <table class="w-full min-w-[1250px] table-fixed text-sm">
+              <colgroup>
+                <col class="w-[9%]" />
+                <col class="w-[17%]" />
+                <col class="w-[6%]" />
+                <col class="w-[10%]" />
+                <col class="w-[19%]" />
+                <col class="w-[20%]" />
+                <col class="w-[8%]" />
+                <col class="w-[11%]" />
+              </colgroup>
               <thead class="border-b border-neutral-200 bg-neutral-50">
                 <tr>
                   <th><button data-sort="date" class="sort-btn px-4 py-3 text-left font-semibold text-neutral-700">Date</button></th>
@@ -253,9 +263,16 @@
           .replace(/'/g, "&#039;");
       }
 
+      function extractFirstUrl(value) {
+        const text = String(value || "");
+        const match = text.match(/https?:\/\/[^\s)>"']+/i);
+        return match ? match[0] : "";
+      }
+
       function safeUrl(url) {
         try {
-          const u = new URL(String(url || "").trim());
+          const candidate = extractFirstUrl(url) || String(url || "").trim();
+          const u = new URL(candidate);
           return u.protocol === "http:" || u.protocol === "https:" ? u.href : "";
         } catch {
           return "";
@@ -490,18 +507,23 @@
 
         tbody.innerHTML = sortedRows.map((row, i) => {
           const x = getMappedRow(row);
-          const link = safeUrl(x.link);
+          const rawLinkText = String(x.link || "").trim();
+          const link = safeUrl(rawLinkText);
+          const linkDisplay = rawLinkText || link || "";
+          const linkHtml = link
+            ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${escapeHtml(linkDisplay).replace(/\n/g, "<br/>")}</a>`
+            : escapeHtml(linkDisplay).replace(/\n/g, "<br/>");
           const rc = i % 2 === 0 ? "bg-white" : "bg-[#FCFCFD]";
           return `
             <tr class="${rc}">
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(formatDateMDY(x.date))}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3 font-medium">${escapeHtml(x.publication)}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(normalizeTier(x.tier))}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${formatNumber(toNumber(x.audience))}</td>
-              <td class="border-b border-neutral-100 px-4 py-3">${escapeHtml(x.title)}</td>
-              <td class="border-b border-neutral-100 px-4 py-3 text-[#D8232A]">${link ? `<a href="${link}" target="_blank" rel="noopener noreferrer">${escapeHtml(link)}</a>` : ""}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${escapeHtml(x.mediaType || "Other")}</td>
-              <td class="whitespace-nowrap border-b border-neutral-100 px-4 py-3">${formatCurrency(toNumber(x.publicity))}</td>
+              <td class="whitespace-nowrap align-top border-b border-neutral-100 px-4 py-3">${escapeHtml(formatDateMDY(x.date))}</td>
+              <td class="align-top border-b border-neutral-100 px-4 py-3 font-medium break-words leading-6">${escapeHtml(x.publication)}</td>
+              <td class="whitespace-nowrap align-top border-b border-neutral-100 px-4 py-3">${escapeHtml(normalizeTier(x.tier))}</td>
+              <td class="whitespace-nowrap align-top border-b border-neutral-100 px-4 py-3">${formatNumber(toNumber(x.audience))}</td>
+              <td class="align-top border-b border-neutral-100 px-4 py-3 break-words leading-6">${escapeHtml(x.title)}</td>
+              <td class="align-top border-b border-neutral-100 px-4 py-3 text-[#D8232A] break-all leading-6 whitespace-pre-wrap">${linkHtml}</td>
+              <td class="whitespace-nowrap align-top border-b border-neutral-100 px-4 py-3">${escapeHtml(x.mediaType || "Other")}</td>
+              <td class="whitespace-nowrap align-top border-b border-neutral-100 px-4 py-3">${formatCurrency(toNumber(x.publicity))}</td>
             </tr>
           `;
         }).join("");
@@ -730,7 +752,7 @@
             toPdfText(cleanCell(normalizeTier(r.tier || ""))),
             toPdfText(cleanCell(formatNumber(toNumber(r.audience)))),
             toPdfText(cleanCell(r.title || "")),
-            toPdfText(cleanCell(safeUrl(r.link) || "")),
+            toPdfText(cleanCell(r.link || "")),
             toPdfText(cleanCell(r.mediaType || "Other")),
             toPdfText(cleanCell(formatCurrency(toNumber(r.publicity)))),
           ]);
@@ -762,7 +784,7 @@
               if (data.section === "body" && data.column.index === 5) {
                 const rowIndex = data?.row?.index;
                 const rowValues = Number.isInteger(rowIndex) ? body[rowIndex] : null;
-                const url = Array.isArray(rowValues) ? rowValues[5] : "";
+                const url = Array.isArray(rowValues) ? safeUrl(rowValues[5]) : "";
                 if (url) doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
               }
             },
