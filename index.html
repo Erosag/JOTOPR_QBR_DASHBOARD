@@ -177,7 +177,8 @@
     <script>
       const COLOR_MAP = {
         tv: "#2E86DE",
-        onlinePrint: "#27AE60",
+        online: "#27AE60",
+        print: "#14B8A6",
         radio: "#F5B041",
         podcasts: "#8E44AD",
         youtube: "#5D6D7E",
@@ -437,7 +438,8 @@
       function getMediaColor(mediaType) {
         const n = normalizeKey(mediaType);
         if (n.includes("tv")) return COLOR_MAP.tv;
-        if (n.includes("online") || n.includes("print")) return COLOR_MAP.onlinePrint;
+        if (n.includes("online")) return COLOR_MAP.online;
+        if (n.includes("print")) return COLOR_MAP.print;
         if (n.includes("radio")) return COLOR_MAP.radio;
         if (n.includes("podcast")) return COLOR_MAP.podcasts;
         if (n.includes("youtube")) return COLOR_MAP.youtube;
