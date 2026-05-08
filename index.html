@@ -617,7 +617,7 @@
           .trim();
       }
 
-      function makePdfDoughnutImage(labels, values, colors, centerValue, centerLabel) {
+      function makePdfDoughnutImage(labels, values, colors) {
         const safeLabels = labels.length ? labels : ["No data"];
         const safeValues = values.length ? values : [1];
         const safeColors = colors.length ? colors : ["#D1D5DB"];
@@ -645,18 +645,6 @@
             plugins: { legend: { display: false } },
           },
         });
-
-        // Draw center text to match dashboard style.
-        ctx.save();
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#0f172a";
-        ctx.font = "700 90px Inter, Arial, sans-serif";
-        ctx.fillText(String(centerValue || ""), canvas.width / 2, canvas.height / 2 - 28);
-        ctx.fillStyle = "#6b7280";
-        ctx.font = "500 58px Inter, Arial, sans-serif";
-        ctx.fillText(String(centerLabel || ""), canvas.width / 2, canvas.height / 2 + 72);
-        ctx.restore();
 
         const dataUrl = canvas.toDataURL("image/png", 1);
         chart.destroy();
@@ -750,20 +738,35 @@
           const chartY = 40;
           const chartSize = (pageW - marginX * 2 - gap * 2) / 3;
 
-          const mImg = makePdfDoughnutImage(chartLabels, mentionsValues, chartColors, formatNumber(totalMentions), "Mentions");
-          const aImg = makePdfDoughnutImage(chartLabels, audienceValues, chartColors, formatNumber(totalAudience), "Audience");
-          const pImg = makePdfDoughnutImage(chartLabels, publicityValues, chartColors, formatCurrency(totalPublicity), "Publicity");
+          const mImg = makePdfDoughnutImage(chartLabels, mentionsValues, chartColors);
+          const aImg = makePdfDoughnutImage(chartLabels, audienceValues, chartColors);
+          const pImg = makePdfDoughnutImage(chartLabels, publicityValues, chartColors);
+
+          const drawCenterMetric = (x, y, size, valueText, labelText) => {
+            const cx = x + size / 2;
+            const cy = y + size / 2;
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(22);
+            doc.text(String(valueText), cx, cy - 2, { align: "center", baseline: "middle" });
+            doc.setTextColor(107, 114, 128);
+            doc.setFontSize(10);
+            doc.text(String(labelText), cx, cy + 12, { align: "center", baseline: "middle" });
+            doc.setTextColor(0, 0, 0);
+          };
 
           doc.text("Mentions by Media Type (All Tiers)", marginX, chartTitleY);
           doc.addImage(mImg, "PNG", marginX, chartY, chartSize, chartSize);
+          drawCenterMetric(marginX, chartY, chartSize, formatNumber(totalMentions), "Mentions");
 
           const x2 = marginX + chartSize + gap;
           doc.text("Audience by Media Type (All Tiers)", x2, chartTitleY);
           doc.addImage(aImg, "PNG", x2, chartY, chartSize, chartSize);
+          drawCenterMetric(x2, chartY, chartSize, formatNumber(totalAudience), "Audience");
 
           const x3 = marginX + (chartSize + gap) * 2;
           doc.text("Publicity by Media Type (All Tiers)", x3, chartTitleY);
           doc.addImage(pImg, "PNG", x3, chartY, chartSize, chartSize);
+          drawCenterMetric(x3, chartY, chartSize, formatCurrency(totalPublicity), "Publicity");
 
           const body = listRows.map((r) => [
             toPdfText(cleanCell(formatDateMDY(r.date))),
